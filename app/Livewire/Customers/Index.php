@@ -20,6 +20,7 @@ class Index extends Component
 {
     use WithPagination;
 
+    public string $mode = 'form';
     public string $search = '';
     public ?string $guest_code = null;
     public ?string $title = null;
@@ -60,6 +61,11 @@ class Index extends Component
     public int $children = 0;
     public ?float $nightly_rate = null;
     public ?string $rental_notes = null;
+
+    public function mount(string $mode = 'form'): void
+    {
+        $this->mode = in_array($mode, ['form', 'registry'], true) ? $mode : 'form';
+    }
 
     public function updatedSearch(): void
     {
