@@ -1,58 +1,119 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ProStay Africa
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+ERP hotelier modulaire construit avec Laravel, Livewire et Breeze (authentification).
 
-## About Laravel
+## Stack technique
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.4+
+- Laravel 13
+- Livewire 3 + Volt
+- Breeze (auth Livewire)
+- Vite + Tailwind CSS
+- SQLite (par defaut), compatible MySQL/PostgreSQL
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Fonctionnalites implementees (MVP)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Authentification complete: login, register, reset password, verification email, profil
+- Base ERP hoteliere:
+	- gestion clients
+	- commandes
+	- facturation
+	- paiements
+	- POS quick sale
+- Structure metier:
+	- enums de domaine
+	- services applicatifs (orders, billing, payment, pos)
+	- migrations et seeders
+	- composants Livewire par module
 
-## Learning Laravel
+## Installation locale
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+1. Installer les dependances PHP:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+2. Initialiser l'environnement:
 
-## Contributing
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. Migrer et seeder la base:
 
-## Code of Conduct
+```bash
+php artisan migrate:fresh --seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+4. Installer les dependances front:
 
-## Security Vulnerabilities
+```bash
+npm install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+5. Lancer l'application:
 
-## License
+```bash
+php artisan serve
+npm run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Build production
+
+```bash
+npm run build
+```
+
+Les assets sont generes dans `public/build`.
+
+## Routes principales
+
+- `/` -> redirige vers `login` (invite) ou `dashboard` (auth)
+- `/dashboard`
+- `/customers`
+- `/orders`
+- `/billing/invoices`
+- `/pos`
+- `/profile`
+
+## Utilisateur de test (seeder)
+
+- Email: `test@example.com`
+- Mot de passe: `password`
+
+## Commandes utiles
+
+```bash
+# tests
+php artisan test
+
+# routes
+php artisan route:list
+
+# nettoyage cache
+php artisan optimize:clear
+```
+
+## Depannage assets (Vite/Tailwind)
+
+Si le style ne se charge pas:
+
+1. Verifier qu'il n'y a pas de fichier `public/hot` residuel si vous n'utilisez pas `npm run dev`.
+2. Regenerer les assets:
+
+```bash
+rm -f public/hot
+npm run build
+```
+
+3. En dev, laisser `npm run dev` actif pendant la navigation.
+
+## Documentation complementaire
+
+- Roadmap MVP: `docs/mvp-erp-roadmap.md`
+
+## Licence
+
+Projet distribue sous licence MIT.

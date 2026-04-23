@@ -33,11 +33,37 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')" wire:navigate>
+                        {{ __('Customers') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')" wire:navigate>
+                        {{ __('Reservations') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')" wire:navigate>
+                        {{ __('Rooms') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('orders.create')" :active="request()->routeIs('orders.*')" wire:navigate>
+                        {{ __('Orders') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('billing.invoices')" :active="request()->routeIs('billing.*')" wire:navigate>
+                        {{ __('Billing') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('pos.quick-sale')" :active="request()->routeIs('pos.*')" wire:navigate>
+                        {{ __('POS') }}
+                    </x-nav-link>
+                    <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" wire:navigate>
+                        {{ __('Reports') }}
+                    </x-nav-link>
                 </div>
             </div>
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
+                <div class="me-3 rounded-full border border-gray-200 p-1 text-xs">
+                    <a href="{{ route('locale.switch', 'fr') }}" class="rounded-full px-2 py-1 font-semibold {{ app()->getLocale() === 'fr' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:text-gray-900' }}">FR</a>
+                    <a href="{{ route('locale.switch', 'en') }}" class="rounded-full px-2 py-1 font-semibold {{ app()->getLocale() === 'en' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:text-gray-900' }}">EN</a>
+                </div>
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -84,6 +110,27 @@ new class extends Component
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')" wire:navigate>
+                {{ __('Customers') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')" wire:navigate>
+                {{ __('Reservations') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')" wire:navigate>
+                {{ __('Rooms') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('orders.create')" :active="request()->routeIs('orders.*')" wire:navigate>
+                {{ __('Orders') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('billing.invoices')" :active="request()->routeIs('billing.*')" wire:navigate>
+                {{ __('Billing') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('pos.quick-sale')" :active="request()->routeIs('pos.*')" wire:navigate>
+                {{ __('POS') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" wire:navigate>
+                {{ __('Reports') }}
+            </x-responsive-nav-link>
         </div>
 
         <!-- Responsive Settings Options -->
@@ -94,6 +141,14 @@ new class extends Component
             </div>
 
             <div class="mt-3 space-y-1">
+                <div class="px-4 py-2">
+                    <p class="text-xs uppercase tracking-wider text-gray-500">{{ __('Language') }}</p>
+                    <div class="mt-2 flex gap-2">
+                        <a href="{{ route('locale.switch', 'fr') }}" class="rounded-lg px-3 py-1 text-xs font-semibold {{ app()->getLocale() === 'fr' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700' }}">FR</a>
+                        <a href="{{ route('locale.switch', 'en') }}" class="rounded-lg px-3 py-1 text-xs font-semibold {{ app()->getLocale() === 'en' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700' }}">EN</a>
+                    </div>
+                </div>
+
                 <x-responsive-nav-link :href="route('profile')" wire:navigate>
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
