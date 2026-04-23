@@ -18,9 +18,32 @@
         @livewireStyles
         <script>
             document.addEventListener('alpine:init', () => {
+                const storageKey = 'prostay.sidebar.open';
+                let initialOpen = false;
+
+                try {
+                    const saved = localStorage.getItem(storageKey);
+                    if (saved !== null) {
+                        initialOpen = saved === '1';
+                    }
+                } catch (error) {
+                    // Keep default value when localStorage is unavailable.
+                }
+
                 Alpine.store('sidebar', {
-                    open: true,
-                    toggle() { this.open = !this.open; }
+                    open: initialOpen,
+                    setOpen(value) {
+                        this.open = value;
+
+                        try {
+                            localStorage.setItem(storageKey, value ? '1' : '0');
+                        } catch (error) {
+                            // Ignore storage failures and keep UI state in memory.
+                        }
+                    },
+                    toggle() {
+                        this.setOpen(!this.open);
+                    }
                 });
             });
         </script>
@@ -28,6 +51,19 @@
     <body class="antialiased">
         <div class="min-h-screen transition-[padding] duration-300 ease-in-out" :class="$store.sidebar.open ? 'lg:pl-72' : 'lg:pl-0'">
             <livewire:layout.navigation />
+
+            <div class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 backdrop-blur">
+                <div class="mx-auto flex max-w-7xl justify-end px-4 py-2 sm:px-6 lg:px-8">
+                    <a
+                        href="{{ route('dashboard') }}"
+                        wire:navigate
+                        class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+                    >
+                        <i class="fa-solid fa-house w-4 text-center text-slate-400"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+            </div>
 
             @if (isset($header))
                 <header class="border-b border-slate-200/80 bg-white/80 backdrop-blur">
