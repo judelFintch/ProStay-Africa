@@ -17,6 +17,10 @@ class Product extends Model
         'name',
         'sku',
         'unit',
+        'purchase_unit',
+        'storage_area',
+        'is_perishable',
+        'expires_at',
         'unit_cost',
         'selling_price',
         'stock_quantity',
@@ -27,7 +31,9 @@ class Product extends Model
     protected function casts(): array
     {
         return [
+            'expires_at' => 'date',
             'is_active' => 'boolean',
+            'is_perishable' => 'boolean',
         ];
     }
 

@@ -148,23 +148,86 @@ class TestDataSeeder extends Seeder
             );
         }
 
-        $catHousekeeping = ProductCategory::query()->updateOrCreate(['name' => 'Housekeeping'], []);
+        $catFresh = ProductCategory::query()->updateOrCreate(
+            ['code' => 'fresh-food'],
+            ['name' => 'Vivres frais', 'description' => 'Produits frais pour la cuisine', 'color' => 'emerald', 'is_perishable' => true, 'sort_order' => 1, 'is_active' => true]
+        );
+
+        $catDry = ProductCategory::query()->updateOrCreate(
+            ['code' => 'dry-goods'],
+            ['name' => 'Epicerie seche', 'description' => 'Denrees seches et ingredients', 'color' => 'amber', 'is_perishable' => false, 'sort_order' => 2, 'is_active' => true]
+        );
+
+        $catDrinksStock = ProductCategory::query()->updateOrCreate(
+            ['code' => 'drinks'],
+            ['name' => 'Boissons', 'description' => 'Boissons fraiches et service bar', 'color' => 'sky', 'is_perishable' => false, 'sort_order' => 3, 'is_active' => true]
+        );
+
+        $catHousekeeping = ProductCategory::query()->updateOrCreate(
+            ['code' => 'cleaning'],
+            ['name' => 'Entretien', 'description' => 'Produits de nettoyage et entretien', 'color' => 'slate', 'is_perishable' => false, 'sort_order' => 6, 'is_active' => true]
+        );
         $supplier = Supplier::query()->updateOrCreate(
             ['name' => 'Fournisseur Central'],
             ['phone' => '+221780000010', 'email' => 'supply@example.com', 'address' => 'Dakar']
         );
 
+        $freshSupplier = Supplier::query()->updateOrCreate(
+            ['name' => 'Marche Frais'],
+            ['phone' => '+221780000020', 'email' => 'fresh@example.com', 'address' => 'Dakar']
+        );
+
         $productWater = Product::query()->updateOrCreate(
             ['sku' => 'PRD-EAU-50CL'],
             [
-                'product_category_id' => $catHousekeeping->id,
+                'product_category_id' => $catDrinksStock->id,
                 'supplier_id' => $supplier->id,
                 'name' => 'Eau minerale 50cl',
                 'unit' => 'bottle',
+                'purchase_unit' => 'carton',
+                'storage_area' => 'Bar / reserve boissons',
+                'is_perishable' => false,
                 'unit_cost' => 200,
                 'selling_price' => 1000,
                 'stock_quantity' => 500,
                 'alert_threshold' => 40,
+                'is_active' => true,
+            ]
+        );
+
+        Product::query()->updateOrCreate(
+            ['sku' => 'PRD-POULET-FRAIS'],
+            [
+                'product_category_id' => $catFresh->id,
+                'supplier_id' => $freshSupplier->id,
+                'name' => 'Poulet frais',
+                'unit' => 'kg',
+                'purchase_unit' => 'crate',
+                'storage_area' => 'Chambre froide cuisine',
+                'is_perishable' => true,
+                'expires_at' => now()->addDays(3)->toDateString(),
+                'unit_cost' => 3200,
+                'selling_price' => 0,
+                'stock_quantity' => 25,
+                'alert_threshold' => 8,
+                'is_active' => true,
+            ]
+        );
+
+        Product::query()->updateOrCreate(
+            ['sku' => 'PRD-RIZ-BR-25'],
+            [
+                'product_category_id' => $catDry->id,
+                'supplier_id' => $supplier->id,
+                'name' => 'Riz brise 25kg',
+                'unit' => 'kg',
+                'purchase_unit' => 'bag',
+                'storage_area' => 'Reserve seche',
+                'is_perishable' => false,
+                'unit_cost' => 700,
+                'selling_price' => 0,
+                'stock_quantity' => 120,
+                'alert_threshold' => 30,
                 'is_active' => true,
             ]
         );
