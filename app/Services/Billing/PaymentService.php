@@ -6,6 +6,7 @@ use App\Enums\PaymentMethod;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -35,6 +36,19 @@ class PaymentService
                     app(InvoiceService::class)->recalculateTotals($invoice);
                 }
             }
+
+            app(AuditLogger::class)->log(
+                action: 'payment.recorded',
+                entityType: 'payment',
+                entityId: $payment->id,
+                newValues: [
+                    'reference' => $payment->reference,
+                    'invoice_id' => $payment->invoice_id,
+                    'order_id' => $payment->order_id,
+                    'amount' => $payment->amount,
+                    'method' => $payment->method->value,
+                ]
+            );
 
             return $payment;
         });

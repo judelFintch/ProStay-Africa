@@ -3,6 +3,7 @@
 namespace App\Livewire\Pos;
 
 use App\Models\Customer;
+use App\Models\Product;
 use App\Models\ServiceArea;
 use App\Services\Pos\PosService;
 use Illuminate\Support\Facades\Auth;
@@ -14,12 +15,12 @@ class QuickSale extends Component
     public ?int $customer_id = null;
     public string $payment_method = 'cash';
     public array $items = [
-        ['item_name' => '', 'quantity' => 1, 'unit_price' => 0],
+        ['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0],
     ];
 
     public function addItem(): void
     {
-        $this->items[] = ['item_name' => '', 'quantity' => 1, 'unit_price' => 0];
+        $this->items[] = ['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0];
     }
 
     public function removeItem(int $index): void
@@ -35,6 +36,7 @@ class QuickSale extends Component
             'customer_id' => ['nullable', 'exists:customers,id'],
             'payment_method' => ['required', 'in:cash,mobile_money,card,bank_transfer'],
             'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['nullable', 'exists:products,id'],
             'items.*.item_name' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
@@ -51,7 +53,7 @@ class QuickSale extends Component
         $this->dispatch('pos-sale-done', reference: $order->reference);
         $this->reset(['customer_id']);
         $this->payment_method = 'cash';
-        $this->items = [['item_name' => '', 'quantity' => 1, 'unit_price' => 0]];
+        $this->items = [['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0]];
     }
 
     public function render()
@@ -59,6 +61,7 @@ class QuickSale extends Component
         return view('livewire.pos.quick-sale', [
             'areas' => ServiceArea::query()->whereIn('code', ['restaurant', 'bar', 'terrace', 'pos'])->orderBy('name')->get(),
             'customers' => Customer::query()->orderBy('full_name')->limit(100)->get(),
+            'products' => Product::query()->where('is_active', true)->orderBy('name')->limit(200)->get(),
         ]);
     }
 }

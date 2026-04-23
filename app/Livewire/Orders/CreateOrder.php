@@ -6,6 +6,7 @@ use App\Enums\CustomerType;
 use App\Enums\OrderStatus;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\ServiceArea;
 use App\Services\Orders\OrderService;
 use Illuminate\Support\Facades\Auth;
@@ -17,13 +18,13 @@ class CreateOrder extends Component
     public ?int $customer_id = null;
     public string $customer_type = 'walk_in_anonymous';
     public array $items = [
-        ['item_name' => '', 'quantity' => 1, 'unit_price' => 0],
+        ['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0],
     ];
     public ?string $notes = null;
 
     public function addItemRow(): void
     {
-        $this->items[] = ['item_name' => '', 'quantity' => 1, 'unit_price' => 0];
+        $this->items[] = ['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0];
     }
 
     public function removeItemRow(int $index): void
@@ -39,6 +40,7 @@ class CreateOrder extends Component
             'customer_id' => ['nullable', 'exists:customers,id'],
             'customer_type' => ['required', 'in:' . implode(',', array_column(CustomerType::cases(), 'value'))],
             'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['nullable', 'exists:products,id'],
             'items.*.item_name' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
@@ -58,7 +60,7 @@ class CreateOrder extends Component
         $this->dispatch('order-created', reference: $order->reference);
         $this->reset(['customer_id', 'notes']);
         $this->customer_type = CustomerType::WalkInAnonymous->value;
-        $this->items = [['item_name' => '', 'quantity' => 1, 'unit_price' => 0]];
+        $this->items = [['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0]];
     }
 
     public function render()
@@ -66,6 +68,7 @@ class CreateOrder extends Component
         return view('livewire.orders.create-order', [
             'serviceAreas' => ServiceArea::query()->where('is_active', true)->orderBy('name')->get(),
             'customers' => Customer::query()->orderBy('full_name')->limit(100)->get(),
+            'products' => Product::query()->where('is_active', true)->orderBy('name')->limit(200)->get(),
             'recentOrders' => Order::query()->latest()->limit(10)->get(),
             'customerTypes' => array_column(CustomerType::cases(), 'value'),
         ]);

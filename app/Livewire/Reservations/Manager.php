@@ -20,6 +20,7 @@ class Manager extends Component
     public int $adults = 1;
     public int $children = 0;
     public ?string $notes = null;
+    public int $extend_nights = 1;
 
     public function createReservation(): void
     {
@@ -88,12 +89,49 @@ class Manager extends Component
         ]);
     }
 
+    public function extendStay(int $stayId): void
+    {
+        $this->validate([
+            'extend_nights' => ['required', 'integer', 'min:1', 'max:30'],
+        ]);
+
+        $stay = Stay::query()->findOrFail($stayId);
+        $currentExpected = $stay->expected_check_out_at ?? now();
+
+        $stay->update([
+            'expected_check_out_at' => $currentExpected->copy()->addDays($this->extend_nights),
+        ]);
+    }
+
+    public function checkOut(int $stayId): void
+    {
+        $stay = Stay::query()->with(['room', 'reservation'])->findOrFail($stayId);
+
+        if ($stay->status !== StayStatus::Active) {
+            return;
+        }
+
+        $stay->update([
+            'status' => StayStatus::CheckedOut->value,
+            'check_out_at' => now(),
+        ]);
+
+        $stay->room?->update([
+            'status' => RoomStatus::Cleaning->value,
+        ]);
+
+        $stay->reservation?->update([
+            'status' => ReservationStatus::Confirmed->value,
+        ]);
+    }
+
     public function render()
     {
         return view('livewire.reservations.manager', [
             'customers' => Customer::query()->orderBy('full_name')->limit(150)->get(),
             'rooms' => Room::query()->orderBy('number')->get(),
             'reservations' => Reservation::query()->with(['customer', 'room'])->latest()->limit(20)->get(),
+            'activeStays' => Stay::query()->with(['customer', 'room'])->where('status', StayStatus::Active->value)->latest()->limit(20)->get(),
             'checkedInValue' => ReservationStatus::CheckedIn->value,
         ]);
     }

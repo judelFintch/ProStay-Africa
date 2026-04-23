@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+	:root {
+		--prostay-ink: #0f172a;
+		--prostay-mint: #0f766e;
+		--prostay-copper: #b45309;
+		--prostay-cloud: #f8fafc;
+	}
+
+	body {
+		@apply bg-slate-100 text-slate-900;
+		background-image:
+			radial-gradient(circle at 15% -10%, rgba(13, 148, 136, 0.14), transparent 40%),
+			radial-gradient(circle at 85% 0%, rgba(245, 158, 11, 0.14), transparent 35%);
+		font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+	}
+}
+
+@layer components {
+	.prostay-surface {
+		@apply rounded-2xl bg-white shadow-sm ring-1 ring-slate-200;
+	}
+
+	.prostay-kicker {
+		@apply text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600;
+	}
+
+	.prostay-title {
+		@apply mt-2 text-2xl font-black text-slate-900 sm:text-3xl;
+		font-family: 'Cormorant Garamond', ui-serif, Georgia, serif;
+	}
+
+	.prostay-input {
+		@apply w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500;
+	}
+}

@@ -5,6 +5,9 @@ namespace App\Services\Orders;
 use App\Enums\CustomerType;
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Models\Product;
+use App\Services\Audit\AuditLogger;
+use App\Services\Stock\StockService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -30,18 +33,46 @@ class OrderService
             foreach (Arr::get($payload, 'items', []) as $item) {
                 $quantity = (float) Arr::get($item, 'quantity', 1);
                 $unitPrice = (float) Arr::get($item, 'unit_price', 0);
+                $productId = Arr::get($item, 'product_id');
 
-                $order->items()->create([
+                $createdItem = $order->items()->create([
                     'menu_id' => Arr::get($item, 'menu_id'),
-                    'product_id' => Arr::get($item, 'product_id'),
+                    'product_id' => $productId,
                     'item_name' => Arr::get($item, 'item_name', 'Item'),
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'line_total' => $quantity * $unitPrice,
                 ]);
+
+                // Deduct stock automatically when the order item is linked to a product.
+                if ($productId) {
+                    $product = Product::query()->find($productId);
+                    if ($product) {
+                        app(StockService::class)->moveOut(
+                            product: $product,
+                            quantity: $quantity,
+                            unitCost: (float) $product->unit_cost,
+                            userId: Arr::get($payload, 'created_by'),
+                            reason: 'Order ' . $order->reference . ' / item #' . $createdItem->id
+                        );
+                    }
+                }
             }
 
-            return $this->recalculateTotals($order->fresh('items'));
+            $freshOrder = $this->recalculateTotals($order->fresh('items'));
+
+            app(AuditLogger::class)->log(
+                action: 'order.created',
+                entityType: 'order',
+                entityId: $freshOrder->id,
+                newValues: [
+                    'reference' => $freshOrder->reference,
+                    'customer_type' => $freshOrder->customer_type->value,
+                    'total' => $freshOrder->total,
+                ]
+            );
+
+            return $freshOrder;
         });
     }
 

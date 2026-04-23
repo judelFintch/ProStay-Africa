@@ -16,150 +16,172 @@ new class extends Component
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" wire:navigate>
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
-                    </a>
-                </div>
+<nav x-data="{ open: false }" class="relative z-40">
+    @php
+        $links = [
+            ['label' => __('Dashboard'), 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'fa-chart-line'],
+            ['label' => __('Customers'), 'route' => 'customers.index', 'match' => 'customers.*', 'icon' => 'fa-users'],
+            ['label' => __('Reservations'), 'route' => 'reservations.index', 'match' => 'reservations.*', 'icon' => 'fa-calendar-check'],
+            ['label' => __('Rooms'), 'route' => 'rooms.index', 'match' => 'rooms.*', 'icon' => 'fa-bed'],
+            ['label' => __('Orders'), 'route' => 'orders.create', 'match' => 'orders.*', 'icon' => 'fa-utensils'],
+            ['label' => __('Invoices'), 'route' => 'billing.invoices', 'match' => 'billing.invoices', 'icon' => 'fa-file-invoice'],
+            ['label' => __('Payments'), 'route' => 'billing.payments', 'match' => 'billing.payments', 'icon' => 'fa-wallet'],
+            ['label' => __('Stock'), 'route' => 'stock.index', 'match' => 'stock.*', 'icon' => 'fa-boxes-stacked'],
+            ['label' => __('Laundry'), 'route' => 'laundry.index', 'match' => 'laundry.*', 'icon' => 'fa-soap'],
+            ['label' => __('POS'), 'route' => 'pos.quick-sale', 'match' => 'pos.*', 'icon' => 'fa-cash-register'],
+            ['label' => __('Reports'), 'route' => 'reports.index', 'match' => 'reports.*', 'icon' => 'fa-chart-pie'],
+        ];
+    @endphp
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')" wire:navigate>
-                        {{ __('Customers') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')" wire:navigate>
-                        {{ __('Reservations') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')" wire:navigate>
-                        {{ __('Rooms') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('orders.create')" :active="request()->routeIs('orders.*')" wire:navigate>
-                        {{ __('Orders') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('billing.invoices')" :active="request()->routeIs('billing.*')" wire:navigate>
-                        {{ __('Billing') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('pos.quick-sale')" :active="request()->routeIs('pos.*')" wire:navigate>
-                        {{ __('POS') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" wire:navigate>
-                        {{ __('Reports') }}
-                    </x-nav-link>
+    <div class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur lg:hidden">
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center gap-2">
+                <x-application-logo class="h-8 w-8 fill-current text-emerald-700" />
+                <div>
+                    <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">ProStay</p>
+                    <p class="text-sm font-bold text-slate-900">Hotel Dashboard</p>
                 </div>
             </div>
-
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <div class="me-3 rounded-full border border-gray-200 p-1 text-xs">
-                    <a href="{{ route('locale.switch', 'fr') }}" class="rounded-full px-2 py-1 font-semibold {{ app()->getLocale() === 'fr' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:text-gray-900' }}">FR</a>
-                    <a href="{{ route('locale.switch', 'en') }}" class="rounded-full px-2 py-1 font-semibold {{ app()->getLocale() === 'en' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:text-gray-900' }}">EN</a>
-                </div>
-
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
-
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile')" wire:navigate>
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <button wire:click="logout" class="w-full text-start">
-                            <x-dropdown-link>
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </button>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            <button @click="open = !open" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm">
+                <i class="fa-solid" :class="open ? 'fa-xmark' : 'fa-bars'"></i>
+            </button>
         </div>
     </div>
 
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('customers.index')" :active="request()->routeIs('customers.*')" wire:navigate>
-                {{ __('Customers') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('reservations.index')" :active="request()->routeIs('reservations.*')" wire:navigate>
-                {{ __('Reservations') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('rooms.index')" :active="request()->routeIs('rooms.*')" wire:navigate>
-                {{ __('Rooms') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('orders.create')" :active="request()->routeIs('orders.*')" wire:navigate>
-                {{ __('Orders') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('billing.invoices')" :active="request()->routeIs('billing.*')" wire:navigate>
-                {{ __('Billing') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('pos.quick-sale')" :active="request()->routeIs('pos.*')" wire:navigate>
-                {{ __('POS') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" wire:navigate>
-                {{ __('Reports') }}
-            </x-responsive-nav-link>
-        </div>
+    <div x-cloak x-show="open" class="fixed inset-0 z-40 bg-slate-900/40 lg:hidden" @click="open = false"></div>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
-                <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
-            </div>
-
-            <div class="mt-3 space-y-1">
-                <div class="px-4 py-2">
-                    <p class="text-xs uppercase tracking-wider text-gray-500">{{ __('Language') }}</p>
-                    <div class="mt-2 flex gap-2">
-                        <a href="{{ route('locale.switch', 'fr') }}" class="rounded-lg px-3 py-1 text-xs font-semibold {{ app()->getLocale() === 'fr' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700' }}">FR</a>
-                        <a href="{{ route('locale.switch', 'en') }}" class="rounded-lg px-3 py-1 text-xs font-semibold {{ app()->getLocale() === 'en' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700' }}">EN</a>
+    <aside
+        class="fixed inset-y-0 left-0 z-50 w-72 border-r border-slate-200 bg-white shadow-xl transition-transform duration-300 lg:hidden"
+        :class="open ? 'translate-x-0' : '-translate-x-full'"
+    >
+        <div class="flex h-full flex-col">
+            <div class="border-b border-slate-200 px-5 py-4">
+                <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-3" @click="open = false">
+                    <x-application-logo class="h-10 w-10 fill-current text-emerald-700" />
+                    <div>
+                        <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">ProStay Africa</p>
+                        <p class="text-sm font-bold text-slate-900">Hotel Command Center</p>
                     </div>
+                </a>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-3 py-4">
+                <div class="space-y-1">
+                    @foreach($links as $link)
+                        @php
+                            $isActive = request()->routeIs($link['match']);
+                        @endphp
+                        <a
+                            href="{{ route($link['route']) }}"
+                            wire:navigate
+                            @click="open = false"
+                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ $isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+                        >
+                            <i class="fa-solid {{ $link['icon'] }} w-4 text-center"></i>
+                            <span>{{ $link['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 p-4">
+                <div class="mb-3 rounded-xl bg-slate-50 px-3 py-2">
+                    <p class="text-sm font-semibold text-slate-900" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>
+                    <p class="text-xs text-slate-500">{{ auth()->user()->email }}</p>
                 </div>
 
-                <x-responsive-nav-link :href="route('profile')" wire:navigate>
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
+                <div class="mb-3 rounded-full border border-slate-200 p-1 text-center text-xs shadow-sm">
+                    <a href="{{ route('locale.switch', 'fr') }}" class="rounded-full px-3 py-1 font-semibold {{ app()->getLocale() === 'fr' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900' }}">FR</a>
+                    <a href="{{ route('locale.switch', 'en') }}" class="rounded-full px-3 py-1 font-semibold {{ app()->getLocale() === 'en' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900' }}">EN</a>
+                </div>
 
-                <!-- Authentication -->
-                <button wire:click="logout" class="w-full text-start">
-                    <x-responsive-nav-link>
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
+                <a href="{{ route('profile') }}" wire:navigate class="mb-2 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900" @click="open = false">
+                    <i class="fa-regular fa-user w-4 text-center"></i>
+                    {{ __('Profile') }}
+                </a>
+
+                <button wire:click="logout" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">
+                    <i class="fa-solid fa-right-from-bracket w-4 text-center"></i>
+                    {{ __('Log Out') }}
                 </button>
             </div>
         </div>
-    </div>
+    </aside>
+
+    {{-- Desktop re-open button (visible when sidebar is closed) --}}
+    <button
+        x-cloak
+        x-show="!$store.sidebar.open"
+        @click="$store.sidebar.toggle()"
+        class="fixed top-4 left-4 z-50 hidden lg:flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-md text-slate-700 hover:bg-slate-50 transition"
+        title="Ouvrir le menu"
+    >
+        <i class="fa-solid fa-bars text-sm"></i>
+    </button>
+
+    <aside
+        class="fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out hidden lg:flex flex-col"
+        :class="$store.sidebar.open ? 'translate-x-0' : '-translate-x-full'"
+    >
+        <div class="flex h-full flex-col">
+            <div class="border-b border-slate-200 px-5 py-4">
+                <div class="flex items-center justify-between">
+                    <a href="{{ route('dashboard') }}" wire:navigate class="flex items-center gap-3">
+                        <x-application-logo class="h-10 w-10 fill-current text-emerald-700" />
+                        <div>
+                            <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">ProStay Africa</p>
+                            <p class="text-sm font-bold text-slate-900">Hotel Command Center</p>
+                        </div>
+                    </a>
+                    <button
+                        @click="$store.sidebar.toggle()"
+                        class="ml-2 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                        title="Fermer le menu"
+                    >
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-3 py-4">
+                <div class="space-y-1">
+                    @foreach($links as $link)
+                        @php
+                            $isActive = request()->routeIs($link['match']);
+                        @endphp
+                        <a
+                            href="{{ route($link['route']) }}"
+                            wire:navigate
+                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ $isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+                        >
+                            <i class="fa-solid {{ $link['icon'] }} w-4 text-center"></i>
+                            <span>{{ $link['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 p-4">
+                <div class="mb-3 rounded-xl bg-slate-50 px-3 py-2">
+                    <p class="text-sm font-semibold text-slate-900" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></p>
+                    <p class="text-xs text-slate-500">{{ auth()->user()->email }}</p>
+                </div>
+
+                <div class="mb-3 rounded-full border border-slate-200 p-1 text-center text-xs shadow-sm">
+                    <a href="{{ route('locale.switch', 'fr') }}" class="rounded-full px-3 py-1 font-semibold {{ app()->getLocale() === 'fr' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900' }}">FR</a>
+                    <a href="{{ route('locale.switch', 'en') }}" class="rounded-full px-3 py-1 font-semibold {{ app()->getLocale() === 'en' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900' }}">EN</a>
+                </div>
+
+                <a href="{{ route('profile') }}" wire:navigate class="mb-2 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+                    <i class="fa-regular fa-user w-4 text-center"></i>
+                    {{ __('Profile') }}
+                </a>
+
+                <button wire:click="logout" class="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50">
+                    <i class="fa-solid fa-right-from-bracket w-4 text-center"></i>
+                    {{ __('Log Out') }}
+                </button>
+            </div>
+        </div>
+    </aside>
 </nav>

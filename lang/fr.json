@@ -45,5 +45,10 @@
     "Orders today": "Commandes du jour",
     "Service area load": "Charge par zone de service",
     "Area": "Zone",
-    "No data available.": "Aucune donnee disponible."
+    "No data available.": "Aucune donnee disponible.",
+    "Invoices": "Factures",
+    "Payments": "Paiements",
+    "Stock": "Stock",
+    "Laundry": "Blanchisserie",
+    "Active stays": "Sejours actifs"
 }

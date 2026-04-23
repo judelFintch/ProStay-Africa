@@ -105,4 +105,54 @@
             </table>
         </div>
     </div>
+
+    <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+        <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
+            <h2 class="text-lg font-bold text-slate-900">Active stays</h2>
+        </div>
+
+        <div class="border-b border-slate-200 px-5 py-3 sm:px-6">
+            <div class="flex flex-wrap items-end gap-3">
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Extend nights</label>
+                    <input type="number" min="1" max="30" wire:model="extend_nights" class="w-32 rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+                </div>
+                <p class="text-xs text-slate-500">Use extension button on a stay row to add nights.</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs uppercase tracking-wide text-slate-600">
+                        <th class="px-4 py-3">Customer</th>
+                        <th class="px-4 py-3">Room</th>
+                        <th class="px-4 py-3">Check in</th>
+                        <th class="px-4 py-3">Expected check out</th>
+                        <th class="px-4 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    @forelse($activeStays as $stay)
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-slate-900">{{ $stay->customer?->full_name ?? '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $stay->room?->number ?? '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $stay->check_in_at?->format('Y-m-d H:i') }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $stay->expected_check_out_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-2">
+                                    <button wire:click="extendStay({{ $stay->id }})" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-500">Extend</button>
+                                    <button wire:click="checkOut({{ $stay->id }})" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-600">Check-out</button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">No active stays.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>

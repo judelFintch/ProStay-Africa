@@ -5,6 +5,7 @@ namespace App\Services\Billing;
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\Order;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -42,7 +43,20 @@ class InvoiceService
                 }
             }
 
-            return $this->recalculateTotals($invoice->fresh('items'));
+            $freshInvoice = $this->recalculateTotals($invoice->fresh('items'));
+
+            app(AuditLogger::class)->log(
+                action: 'invoice.created',
+                entityType: 'invoice',
+                entityId: $freshInvoice->id,
+                newValues: [
+                    'reference' => $freshInvoice->reference,
+                    'status' => $freshInvoice->status->value,
+                    'total' => $freshInvoice->total,
+                ]
+            );
+
+            return $freshInvoice;
         });
     }
 

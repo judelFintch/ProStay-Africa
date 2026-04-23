@@ -1,4 +1,79 @@
 <x-app-layout>
+    @php
+        $modules = [
+            [
+                'label' => __('Customers'),
+                'description' => 'Gestion des fiches clients et des profils identifies.',
+                'route' => route('customers.index'),
+                'icon' => 'fa-users',
+                'color' => 'from-cyan-500 to-cyan-600',
+            ],
+            [
+                'label' => __('Reservations'),
+                'description' => 'Suivi des reservations, arrivees et annulations.',
+                'route' => route('reservations.index'),
+                'icon' => 'fa-calendar-check',
+                'color' => 'from-emerald-500 to-emerald-600',
+            ],
+            [
+                'label' => __('Rooms'),
+                'description' => 'Pilotage des statuts de chambres en temps reel.',
+                'route' => route('rooms.index'),
+                'icon' => 'fa-bed',
+                'color' => 'from-indigo-500 to-indigo-600',
+            ],
+            [
+                'label' => __('Orders'),
+                'description' => 'Saisie des commandes restaurant, bar et service.',
+                'route' => route('orders.create'),
+                'icon' => 'fa-utensils',
+                'color' => 'from-amber-500 to-amber-600',
+            ],
+            [
+                'label' => __('Invoices'),
+                'description' => 'Creation des factures a partir des commandes ouvertes.',
+                'route' => route('billing.invoices'),
+                'icon' => 'fa-file-invoice-dollar',
+                'color' => 'from-violet-500 to-violet-600',
+            ],
+            [
+                'label' => __('Payments'),
+                'description' => 'Enregistrement des paiements complets et partiels.',
+                'route' => route('billing.payments'),
+                'icon' => 'fa-wallet',
+                'color' => 'from-fuchsia-500 to-fuchsia-600',
+            ],
+            [
+                'label' => __('Stock'),
+                'description' => 'Entrees, sorties et alertes de seuil de stock.',
+                'route' => route('stock.index'),
+                'icon' => 'fa-boxes-stacked',
+                'color' => 'from-amber-500 to-amber-600',
+            ],
+            [
+                'label' => __('Laundry'),
+                'description' => 'Suivi du linge: dirty, washing, clean, distributed.',
+                'route' => route('laundry.index'),
+                'icon' => 'fa-soap',
+                'color' => 'from-sky-500 to-sky-600',
+            ],
+            [
+                'label' => __('POS'),
+                'description' => 'Ventes rapides au comptoir avec encaissement immediat.',
+                'route' => route('pos.quick-sale'),
+                'icon' => 'fa-cash-register',
+                'color' => 'from-rose-500 to-rose-600',
+            ],
+            [
+                'label' => __('Reports'),
+                'description' => 'Vue analytique des revenus, occupation et activite.',
+                'route' => route('reports.index'),
+                'icon' => 'fa-chart-pie',
+                'color' => 'from-slate-600 to-slate-700',
+            ],
+        ];
+    @endphp
+
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <div>
@@ -46,6 +121,29 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="mt-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600">Module Hub</p>
+                        <h3 class="mt-1 text-xl font-black text-slate-900">Acces direct a tous les modules</h3>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ count($modules) }} modules</span>
+                </div>
+
+                <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    @foreach($modules as $module)
+                        <a href="{{ $module['route'] }}" class="group rounded-2xl border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-md" wire:navigate>
+                            <div class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white {{ $module['color'] }}">
+                                <i class="fa-solid {{ $module['icon'] }}"></i>
+                            </div>
+                            <p class="mt-3 text-base font-bold text-slate-900">{{ $module['label'] }}</p>
+                            <p class="mt-1 text-xs text-slate-500">{{ $module['description'] }}</p>
+                            <p class="mt-3 text-xs font-semibold text-emerald-700 group-hover:text-emerald-600">Entrer dans le module <i class="fa-solid fa-arrow-right ml-1"></i></p>
+                        </a>
+                    @endforeach
                 </div>
             </div>
 

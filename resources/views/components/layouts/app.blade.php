@@ -9,18 +9,28 @@
 
         <title>{{ $title }}</title>
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.store('sidebar', {
+                    open: true,
+                    toggle() { this.open = !this.open; }
+                });
+            });
+        </script>
     </head>
-    <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+    <body class="antialiased">
+        <div class="min-h-screen transition-[padding] duration-300 ease-in-out" :class="$store.sidebar.open ? 'lg:pl-72' : 'lg:pl-0'">
             <livewire:layout.navigation />
 
             @if (isset($header))
-                <header class="bg-white shadow">
+                <header class="border-b border-slate-200/80 bg-white/80 backdrop-blur">
                     <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
