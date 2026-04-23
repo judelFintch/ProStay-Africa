@@ -1,48 +1,57 @@
-<div style="max-width: 1100px; margin: 0 auto; padding: 1.5rem; font-family: sans-serif;">
-    <h1 style="margin-bottom: 1rem;">Reports</h1>
+<div class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-gradient-to-br from-slate-900 via-emerald-900 to-teal-900 p-6 text-white shadow-xl sm:p-8">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{{ __('Analytics') }}</p>
+        <h1 class="mt-2 text-2xl font-black sm:text-3xl">{{ __('Reports') }}</h1>
+        <p class="mt-2 text-sm text-slate-200/90">{{ __('A clear snapshot of occupancy, payments, invoices, and service activity.') }}</p>
+    </div>
 
-    <div style="display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:.75rem; margin-bottom:1rem;">
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem;">
-            <p style="margin:0; color:#64748b;">Occupancy</p>
-            <p style="margin:.25rem 0 0; font-size:1.4rem; font-weight:700;">{{ $occupancy }}%</p>
-            <p style="margin:0; color:#64748b; font-size:.85rem;">{{ $activeStays }}/{{ $totalRooms }} rooms occupied</p>
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Occupancy') }}</p>
+            <p class="mt-2 text-3xl font-black text-slate-900">{{ $occupancy }}%</p>
+            <p class="mt-1 text-xs text-slate-500">{{ $activeStays }}/{{ $totalRooms }} {{ __('rooms occupied') }}</p>
         </div>
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem;">
-            <p style="margin:0; color:#64748b;">Revenue today</p>
-            <p style="margin:.25rem 0 0; font-size:1.4rem; font-weight:700;">{{ number_format($todayRevenue, 2, '.', ' ') }}</p>
-            <p style="margin:0; color:#64748b; font-size:.85rem;">XOF</p>
+        <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Revenue today') }}</p>
+            <p class="mt-2 text-3xl font-black text-slate-900">{{ number_format($todayRevenue, 2, '.', ' ') }}</p>
+            <p class="mt-1 text-xs text-slate-500">XOF</p>
         </div>
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem;">
-            <p style="margin:0; color:#64748b;">Open invoices</p>
-            <p style="margin:.25rem 0 0; font-size:1.4rem; font-weight:700;">{{ $openInvoices }}</p>
+        <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Open invoices') }}</p>
+            <p class="mt-2 text-3xl font-black text-slate-900">{{ $openInvoices }}</p>
         </div>
-        <div style="background:#fff; border:1px solid #e5e7eb; border-radius:.7rem; padding:.8rem;">
-            <p style="margin:0; color:#64748b;">Orders today</p>
-            <p style="margin:.25rem 0 0; font-size:1.4rem; font-weight:700;">{{ $ordersToday }}</p>
+        <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Orders today') }}</p>
+            <p class="mt-2 text-3xl font-black text-slate-900">{{ $ordersToday }}</p>
         </div>
     </div>
 
-    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:.7rem; padding:1rem;">
-        <h2 style="margin:0 0 .75rem;">Service area load</h2>
-        <table style="width:100%; border-collapse: collapse;">
-            <thead>
-                <tr style="text-align:left; border-bottom:1px solid #e5e7eb;">
-                    <th style="padding:.5rem;">Area</th>
-                    <th style="padding:.5rem;">Orders</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($serviceAreaLoad as $area)
-                    <tr style="border-bottom:1px solid #f1f5f9;">
-                        <td style="padding:.5rem;">{{ $area->name }}</td>
-                        <td style="padding:.5rem;">{{ $area->orders_count }}</td>
+    <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+        <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
+            <h2 class="text-lg font-bold text-slate-900">{{ __('Service area load') }}</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs uppercase tracking-wide text-slate-600">
+                        <th class="px-4 py-3">{{ __('Area') }}</th>
+                        <th class="px-4 py-3">{{ __('Orders') }}</th>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="2" style="padding:1rem;">No data available.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    @forelse($serviceAreaLoad as $area)
+                        <tr>
+                            <td class="px-4 py-3 font-medium text-slate-900">{{ $area->name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $area->orders_count }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="2" class="px-4 py-8 text-center text-slate-500">{{ __('No data available.') }}</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>

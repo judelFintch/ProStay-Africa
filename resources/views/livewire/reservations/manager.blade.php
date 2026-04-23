@@ -1,58 +1,108 @@
-<div style="max-width: 1100px; margin: 0 auto; padding: 1.5rem; font-family: sans-serif;">
-    <h1 style="margin-bottom: 1rem;">Reservations</h1>
+<div class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-6 text-white shadow-xl sm:p-8">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{{ __('Front Desk') }}</p>
+        <h1 class="mt-2 text-2xl font-black sm:text-3xl">{{ __('Reservations') }}</h1>
+        <p class="mt-2 text-sm text-slate-200/90">{{ __('Create bookings, check in guests, and monitor reservation flow.') }}</p>
+    </div>
 
-    <form wire:submit="createReservation" style="display:grid; gap:.75rem; margin-bottom:1rem; grid-template-columns: repeat(3, minmax(0, 1fr));">
-        <select wire:model="customer_id" style="padding:.6rem; border:1px solid #d1d5db; border-radius:.5rem;">
-            <option value="">Customer</option>
-            @foreach($customers as $customer)
-                <option value="{{ $customer->id }}">{{ $customer->full_name ?? 'Unnamed' }}</option>
-            @endforeach
-        </select>
+    <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
+        <h2 class="text-lg font-bold text-slate-900">{{ __('New reservation') }}</h2>
 
-        <select wire:model="room_id" style="padding:.6rem; border:1px solid #d1d5db; border-radius:.5rem;">
-            <option value="">Room</option>
-            @foreach($rooms as $room)
-                <option value="{{ $room->id }}">Room {{ $room->number }} ({{ $room->status->value }})</option>
-            @endforeach
-        </select>
+        <form wire:submit="createReservation" class="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">{{ __('Customer') }}</label>
+                <select wire:model="customer_id" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                    <option value="">{{ __('Select customer') }}</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}">{{ $customer->full_name ?? 'Unnamed' }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-        <input type="date" wire:model="check_in_date" style="padding:.6rem; border:1px solid #d1d5db; border-radius:.5rem;" />
-        <input type="date" wire:model="check_out_date" style="padding:.6rem; border:1px solid #d1d5db; border-radius:.5rem;" />
-        <input type="number" min="1" wire:model="adults" placeholder="Adults" style="padding:.6rem; border:1px solid #d1d5db; border-radius:.5rem;" />
-        <input type="number" min="0" wire:model="children" placeholder="Children" style="padding:.6rem; border:1px solid #d1d5db; border-radius:.5rem;" />
-        <textarea wire:model="notes" placeholder="Notes" style="grid-column: span 3; padding:.6rem; border:1px solid #d1d5db; border-radius:.5rem;"></textarea>
-        <button type="submit" style="grid-column: span 3; background:#0f766e; color:#fff; border:0; border-radius:.5rem; padding:.7rem;">Create reservation</button>
-    </form>
+            <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">{{ __('Room') }}</label>
+                <select wire:model="room_id" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                    <option value="">{{ __('Select room') }}</option>
+                    @foreach($rooms as $room)
+                        <option value="{{ $room->id }}">Room {{ $room->number }} ({{ $room->status->value }})</option>
+                    @endforeach
+                </select>
+            </div>
 
-    <table style="width:100%; border-collapse: collapse; background:#fff;">
-        <thead>
-            <tr style="text-align:left; border-bottom:1px solid #e5e7eb;">
-                <th style="padding:.6rem;">Customer</th>
-                <th style="padding:.6rem;">Room</th>
-                <th style="padding:.6rem;">Dates</th>
-                <th style="padding:.6rem;">Status</th>
-                <th style="padding:.6rem;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($reservations as $reservation)
-                <tr style="border-bottom:1px solid #f1f5f9;">
-                    <td style="padding:.6rem;">{{ $reservation->customer?->full_name ?? 'Unknown' }}</td>
-                    <td style="padding:.6rem;">{{ $reservation->room?->number ?? '-' }}</td>
-                    <td style="padding:.6rem;">{{ $reservation->check_in_date?->format('Y-m-d') }} -> {{ $reservation->check_out_date?->format('Y-m-d') }}</td>
-                    <td style="padding:.6rem;">{{ $reservation->status->value }}</td>
-                    <td style="padding:.6rem; display:flex; gap:.5rem;">
-                        @if($reservation->status->value !== $checkedInValue)
-                            <button wire:click="checkIn({{ $reservation->id }})" style="background:#111827; color:#fff; border:0; border-radius:.4rem; padding:.4rem .6rem;">Check-in</button>
-                        @endif
-                        <button wire:click="cancel({{ $reservation->id }})" style="background:#dc2626; color:#fff; border:0; border-radius:.4rem; padding:.4rem .6rem;">Cancel</button>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" style="padding:1rem;">No reservations yet.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">{{ __('Check in') }}</label>
+                <input type="date" wire:model="check_in_date" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">{{ __('Check out') }}</label>
+                <input type="date" wire:model="check_out_date" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">{{ __('Adults') }}</label>
+                <input type="number" min="1" wire:model="adults" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+            </div>
+
+            <div>
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">{{ __('Children') }}</label>
+                <input type="number" min="0" wire:model="children" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+            </div>
+
+            <div class="md:col-span-2 xl:col-span-3">
+                <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">{{ __('Notes') }}</label>
+                <textarea wire:model="notes" rows="3" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" placeholder="{{ __('Special requests, preferences, arrival details...') }}"></textarea>
+            </div>
+
+            <div class="md:col-span-2 xl:col-span-3">
+                <button type="submit" class="inline-flex items-center rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600">
+                    {{ __('Create reservation') }}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+        <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
+            <h2 class="text-lg font-bold text-slate-900">{{ __('Recent reservations') }}</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50">
+                    <tr class="text-left text-xs uppercase tracking-wide text-slate-600">
+                        <th class="px-4 py-3">{{ __('Customer') }}</th>
+                        <th class="px-4 py-3">{{ __('Room') }}</th>
+                        <th class="px-4 py-3">{{ __('Dates') }}</th>
+                        <th class="px-4 py-3">{{ __('Status') }}</th>
+                        <th class="px-4 py-3">{{ __('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                    @forelse($reservations as $reservation)
+                        <tr class="align-middle">
+                            <td class="px-4 py-3 font-medium text-slate-900">{{ $reservation->customer?->full_name ?? 'Unknown' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $reservation->room?->number ?? '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $reservation->check_in_date?->format('Y-m-d') }} {{ __('to') }} {{ $reservation->check_out_date?->format('Y-m-d') }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ $reservation->status->value }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap gap-2">
+                                    @if($reservation->status->value !== $checkedInValue)
+                                        <button wire:click="checkIn({{ $reservation->id }})" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700">{{ __('Check-in') }}</button>
+                                    @endif
+                                    <button wire:click="cancel({{ $reservation->id }})" class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-500">{{ __('Cancel') }}</button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">{{ __('No reservations yet.') }}</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
