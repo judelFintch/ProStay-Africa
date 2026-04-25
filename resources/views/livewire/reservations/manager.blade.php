@@ -79,6 +79,53 @@
             </div>
         @enderror
 
+        @if($edit_reservation_id)
+            <form wire:submit="updateReservation" class="grid gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4 sm:px-6 md:grid-cols-2 xl:grid-cols-6">
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Room</label>
+                    <select wire:model="edit_room_id" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                        <option value="">Select room</option>
+                        @foreach($rooms as $room)
+                            <option value="{{ $room->id }}">Room {{ $room->number }} ({{ $room->status->value }})</option>
+                        @endforeach
+                    </select>
+                    @error('edit_room_id') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Check in</label>
+                    <input type="date" wire:model="edit_check_in_date" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+                    @error('edit_check_in_date') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Check out</label>
+                    <input type="date" wire:model="edit_check_out_date" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+                    @error('edit_check_out_date') <p class="mt-1 text-xs font-semibold text-rose-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Adults</label>
+                    <input type="number" min="1" wire:model="edit_adults" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Children</label>
+                    <input type="number" min="0" wire:model="edit_children" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500" />
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-600">Save</button>
+                    <button type="button" wire:click="cancelEdit" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">Close</button>
+                </div>
+
+                <div class="md:col-span-2 xl:col-span-6">
+                    <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Notes</label>
+                    <textarea wire:model="edit_notes" rows="2" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500"></textarea>
+                </div>
+            </form>
+        @endif
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
@@ -105,6 +152,7 @@
                                         <button wire:click="checkIn({{ $reservation->id }})" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700">{{ __('Check-in') }}</button>
                                     @endif
                                     @if(in_array($reservation->status->value, ['pending', 'confirmed'], true))
+                                        <button wire:click="startEdit({{ $reservation->id }})" class="rounded-lg bg-sky-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-600">Edit</button>
                                         <button wire:click="markNoShow({{ $reservation->id }})" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-500">No-show</button>
                                     @endif
                                     <button wire:click="cancel({{ $reservation->id }})" class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-500">{{ __('Cancel') }}</button>

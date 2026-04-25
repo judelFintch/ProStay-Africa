@@ -36,6 +36,20 @@ class Manager extends Component
 
     public ?string $invoice_notice = null;
 
+    public ?int $edit_reservation_id = null;
+
+    public ?int $edit_room_id = null;
+
+    public string $edit_check_in_date = '';
+
+    public string $edit_check_out_date = '';
+
+    public int $edit_adults = 1;
+
+    public int $edit_children = 0;
+
+    public ?string $edit_notes = null;
+
     public function createReservation(): void
     {
         $this->validate([
@@ -162,6 +176,96 @@ class Manager extends Component
         }
     }
 
+    public function startEdit(int $reservationId): void
+    {
+        $reservation = Reservation::query()->findOrFail($reservationId);
+
+        if (! in_array($reservation->status, [
+            ReservationStatus::Pending,
+            ReservationStatus::Confirmed,
+        ], true)) {
+            $this->addError('reservation_action', 'Seule une reservation en attente ou confirmee peut etre modifiee.');
+
+            return;
+        }
+
+        $this->edit_reservation_id = $reservation->id;
+        $this->edit_room_id = $reservation->room_id;
+        $this->edit_check_in_date = $reservation->check_in_date->toDateString();
+        $this->edit_check_out_date = $reservation->check_out_date->toDateString();
+        $this->edit_adults = $reservation->adults;
+        $this->edit_children = $reservation->children;
+        $this->edit_notes = $reservation->notes;
+        $this->resetErrorBag('reservation_action');
+    }
+
+    public function cancelEdit(): void
+    {
+        $this->reset([
+            'edit_reservation_id',
+            'edit_room_id',
+            'edit_check_in_date',
+            'edit_check_out_date',
+            'edit_notes',
+        ]);
+        $this->edit_adults = 1;
+        $this->edit_children = 0;
+    }
+
+    public function updateReservation(): void
+    {
+        $this->validate([
+            'edit_reservation_id' => ['required', 'exists:reservations,id'],
+            'edit_room_id' => ['required', 'exists:rooms,id'],
+            'edit_check_in_date' => ['required', 'date', 'after_or_equal:today'],
+            'edit_check_out_date' => ['required', 'date', 'after:edit_check_in_date'],
+            'edit_adults' => ['required', 'integer', 'min:1'],
+            'edit_children' => ['required', 'integer', 'min:0'],
+            'edit_notes' => ['nullable', 'string'],
+        ]);
+
+        try {
+            DB::transaction(function (): void {
+                $reservation = Reservation::query()->lockForUpdate()->findOrFail($this->edit_reservation_id);
+
+                if (! in_array($reservation->status, [
+                    ReservationStatus::Pending,
+                    ReservationStatus::Confirmed,
+                ], true)) {
+                    throw new RuntimeException('Seule une reservation en attente ou confirmee peut etre modifiee.');
+                }
+
+                $room = Room::query()->lockForUpdate()->findOrFail($this->edit_room_id);
+                $checkIn = Carbon::parse($this->edit_check_in_date)->startOfDay();
+                $checkOut = Carbon::parse($this->edit_check_out_date)->startOfDay();
+
+                $this->ensureRoomCanBeReserved(
+                    room: $room,
+                    checkIn: $checkIn,
+                    checkOut: $checkOut,
+                    adults: $this->edit_adults,
+                    children: $this->edit_children,
+                    ignoredReservationId: $reservation->id,
+                );
+
+                $reservation->update([
+                    'room_id' => $room->id,
+                    'check_in_date' => $checkIn->toDateString(),
+                    'check_out_date' => $checkOut->toDateString(),
+                    'adults' => $this->edit_adults,
+                    'children' => $this->edit_children,
+                    'notes' => $this->edit_notes,
+                ]);
+            });
+        } catch (RuntimeException $exception) {
+            $this->addError('edit_room_id', $exception->getMessage());
+
+            return;
+        }
+
+        $this->cancelEdit();
+    }
+
     public function extendStay(int $stayId): void
     {
         $this->validate([
@@ -242,9 +346,15 @@ class Manager extends Component
         ]);
     }
 
-    private function ensureRoomCanBeReserved(Room $room, Carbon $checkIn, Carbon $checkOut): void
-    {
-        $guestCount = $this->adults + $this->children;
+    private function ensureRoomCanBeReserved(
+        Room $room,
+        Carbon $checkIn,
+        Carbon $checkOut,
+        ?int $adults = null,
+        ?int $children = null,
+        ?int $ignoredReservationId = null,
+    ): void {
+        $guestCount = ($adults ?? $this->adults) + ($children ?? $this->children);
 
         if ($guestCount > (int) $room->capacity) {
             throw new RuntimeException('La capacite de la chambre est insuffisante pour le nombre de voyageurs.');
@@ -258,7 +368,7 @@ class Manager extends Component
             throw new RuntimeException('Cette chambre est actuellement occupee.');
         }
 
-        $hasReservationConflict = Reservation::query()
+        $reservationConflictQuery = Reservation::query()
             ->where('room_id', $room->id)
             ->whereIn('status', [
                 ReservationStatus::Pending->value,
@@ -266,8 +376,13 @@ class Manager extends Component
                 ReservationStatus::CheckedIn->value,
             ])
             ->where('check_in_date', '<', $checkOut->toDateString())
-            ->where('check_out_date', '>', $checkIn->toDateString())
-            ->exists();
+            ->where('check_out_date', '>', $checkIn->toDateString());
+
+        if ($ignoredReservationId) {
+            $reservationConflictQuery->whereKeyNot($ignoredReservationId);
+        }
+
+        $hasReservationConflict = $reservationConflictQuery->exists();
 
         $hasActiveStayConflict = Stay::query()
             ->where('room_id', $room->id)
