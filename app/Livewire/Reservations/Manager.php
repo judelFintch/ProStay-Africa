@@ -120,9 +120,24 @@ class Manager extends Component
 
     public function cancel(int $reservationId): void
     {
-        Reservation::query()->findOrFail($reservationId)->update([
-            'status' => ReservationStatus::Cancelled->value,
-        ]);
+        try {
+            DB::transaction(function () use ($reservationId): void {
+                $reservation = Reservation::query()->lockForUpdate()->findOrFail($reservationId);
+
+                if (! in_array($reservation->status, [
+                    ReservationStatus::Pending,
+                    ReservationStatus::Confirmed,
+                ], true)) {
+                    throw new RuntimeException('Seule une reservation en attente ou confirmee peut etre annulee.');
+                }
+
+                $reservation->update([
+                    'status' => ReservationStatus::Cancelled->value,
+                ]);
+            });
+        } catch (RuntimeException $exception) {
+            $this->addError('reservation_action', $exception->getMessage());
+        }
     }
 
     public function markNoShow(int $reservationId): void
