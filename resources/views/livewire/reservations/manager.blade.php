@@ -73,6 +73,12 @@
             </div>
         @enderror
 
+        @error('reservation_action')
+            <div class="border-b border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 sm:px-6">
+                {{ $message }}
+            </div>
+        @enderror
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
@@ -97,6 +103,9 @@
                                 <div class="flex flex-wrap gap-2">
                                     @if($reservation->status->value !== $checkedInValue)
                                         <button wire:click="checkIn({{ $reservation->id }})" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700">{{ __('Check-in') }}</button>
+                                    @endif
+                                    @if(in_array($reservation->status->value, ['pending', 'confirmed'], true))
+                                        <button wire:click="markNoShow({{ $reservation->id }})" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-500">No-show</button>
                                     @endif
                                     <button wire:click="cancel({{ $reservation->id }})" class="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-500">{{ __('Cancel') }}</button>
                                 </div>

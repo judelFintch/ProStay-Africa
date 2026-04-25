@@ -125,6 +125,28 @@ class Manager extends Component
         ]);
     }
 
+    public function markNoShow(int $reservationId): void
+    {
+        try {
+            DB::transaction(function () use ($reservationId): void {
+                $reservation = Reservation::query()->lockForUpdate()->findOrFail($reservationId);
+
+                if (! in_array($reservation->status, [
+                    ReservationStatus::Pending,
+                    ReservationStatus::Confirmed,
+                ], true)) {
+                    throw new RuntimeException('Seule une reservation en attente ou confirmee peut etre marquee no-show.');
+                }
+
+                $reservation->update([
+                    'status' => ReservationStatus::NoShow->value,
+                ]);
+            });
+        } catch (RuntimeException $exception) {
+            $this->addError('reservation_action', $exception->getMessage());
+        }
+    }
+
     public function extendStay(int $stayId): void
     {
         $this->validate([

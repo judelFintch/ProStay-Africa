@@ -86,6 +86,39 @@ class CheckInTest extends TestCase
         ]);
     }
 
+    public function test_no_show_reservation_cannot_be_checked_in(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        [$reservation] = $this->createReservation(status: 'confirmed');
+
+        Livewire::test(Manager::class)
+            ->call('markNoShow', $reservation->id)
+            ->assertHasNoErrors()
+            ->call('checkIn', $reservation->id)
+            ->assertHasErrors(['checkin']);
+
+        $this->assertSame('no_show', $reservation->fresh()->status->value);
+        $this->assertDatabaseMissing('stays', [
+            'reservation_id' => $reservation->id,
+        ]);
+    }
+
+    public function test_checked_in_reservation_cannot_be_marked_no_show(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        [$reservation] = $this->createReservation(status: 'checked_in');
+
+        Livewire::test(Manager::class)
+            ->call('markNoShow', $reservation->id)
+            ->assertHasErrors(['reservation_action']);
+
+        $this->assertSame('checked_in', $reservation->fresh()->status->value);
+    }
+
     /**
      * @return array{Reservation, Room}
      */
