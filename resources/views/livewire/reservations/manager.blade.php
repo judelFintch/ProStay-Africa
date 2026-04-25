@@ -111,6 +111,12 @@
             <h2 class="text-lg font-bold text-slate-900">Active stays</h2>
         </div>
 
+        @error('checkout')
+            <div class="border-b border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 sm:px-6">
+                {{ $message }}
+            </div>
+        @enderror
+
         <div class="border-b border-slate-200 px-5 py-3 sm:px-6">
             <div class="flex flex-wrap items-end gap-3">
                 <div>
@@ -129,6 +135,7 @@
                         <th class="px-4 py-3">Room</th>
                         <th class="px-4 py-3">Check in</th>
                         <th class="px-4 py-3">Expected check out</th>
+                        <th class="px-4 py-3">Invoice</th>
                         <th class="px-4 py-3">Actions</th>
                     </tr>
                 </thead>
@@ -139,6 +146,20 @@
                             <td class="px-4 py-3 text-slate-700">{{ $stay->room?->number ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $stay->check_in_at?->format('Y-m-d H:i') }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $stay->expected_check_out_at?->format('Y-m-d H:i') ?? '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">
+                                @php($stayInvoice = $stay->invoices->sortByDesc('issued_at')->first())
+                                @if($stayInvoice)
+                                    <div class="space-y-1">
+                                        <div class="font-semibold text-slate-900">{{ $stayInvoice->reference }}</div>
+                                        <div class="text-xs text-slate-500">Reste: {{ number_format($stayInvoice->balance, 2, '.', ' ') }}</div>
+                                        @if($stayInvoice->balance > 0)
+                                            <a href="{{ route('billing.payments', ['invoice' => $stayInvoice->id]) }}" wire:navigate class="text-xs font-semibold text-emerald-700 hover:text-emerald-600">Paiement</a>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-xs text-slate-400">Preparee au check-out</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
                                     <button wire:click="extendStay({{ $stay->id }})" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-500">Extend</button>
@@ -148,7 +169,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-8 text-center text-slate-500">No active stays.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-slate-500">No active stays.</td>
                         </tr>
                     @endforelse
                 </tbody>

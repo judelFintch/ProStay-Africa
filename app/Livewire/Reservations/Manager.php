@@ -9,17 +9,26 @@ use App\Models\Customer;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\Stay;
+use App\Services\Billing\InvoiceService;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class Manager extends Component
 {
     public ?int $customer_id = null;
+
     public ?int $room_id = null;
+
     public string $check_in_date = '';
+
     public string $check_out_date = '';
+
     public int $adults = 1;
+
     public int $children = 0;
+
     public ?string $notes = null;
+
     public int $extend_nights = 1;
 
     public function createReservation(): void
@@ -111,6 +120,21 @@ class Manager extends Component
             return;
         }
 
+        $invoice = app(InvoiceService::class)->openFolderForStay($stay, [
+            'customer_id' => $stay->customer_id,
+            'room_id' => $stay->room_id,
+            'issued_by' => Auth::id(),
+        ]);
+
+        if ((float) $invoice->balance > 0) {
+            $this->addError(
+                'checkout',
+                'Check-out bloque: facture '.$invoice->reference.' avec solde restant '.number_format((float) $invoice->balance, 2, '.', ' ').'.'
+            );
+
+            return;
+        }
+
         $stay->update([
             'status' => StayStatus::CheckedOut->value,
             'check_out_at' => now(),
@@ -121,7 +145,7 @@ class Manager extends Component
         ]);
 
         $stay->reservation?->update([
-            'status' => ReservationStatus::Confirmed->value,
+            'status' => ReservationStatus::CheckedOut->value,
         ]);
     }
 
@@ -131,7 +155,7 @@ class Manager extends Component
             'customers' => Customer::query()->orderBy('full_name')->limit(150)->get(),
             'rooms' => Room::query()->orderBy('number')->get(),
             'reservations' => Reservation::query()->with(['customer', 'room'])->latest()->limit(20)->get(),
-            'activeStays' => Stay::query()->with(['customer', 'room'])->where('status', StayStatus::Active->value)->latest()->limit(20)->get(),
+            'activeStays' => Stay::query()->with(['customer', 'room', 'invoices'])->where('status', StayStatus::Active->value)->latest()->limit(20)->get(),
             'checkedInValue' => ReservationStatus::CheckedIn->value,
         ]);
     }

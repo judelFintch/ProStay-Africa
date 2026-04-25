@@ -5,14 +5,86 @@ namespace App\Services\Billing;
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\Order;
+use App\Models\Stay;
 use App\Services\Audit\AuditLogger;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class InvoiceService
 {
+    public function openFolderForStay(Stay $stay, array $attributes = []): Invoice
+    {
+        return DB::transaction(function () use ($stay, $attributes): Invoice {
+            $invoice = Invoice::query()
+                ->where('stay_id', $stay->id)
+                ->whereIn('status', [
+                    InvoiceStatus::Draft->value,
+                    InvoiceStatus::Unpaid->value,
+                    InvoiceStatus::PartiallyPaid->value,
+                    InvoiceStatus::Paid->value,
+                ])
+                ->latest('issued_at')
+                ->first();
+
+            if (! $invoice) {
+                $invoice = Invoice::create([
+                    'reference' => $attributes['reference'] ?? $this->generateReference(),
+                    'customer_id' => $attributes['customer_id'] ?? $stay->customer_id,
+                    'stay_id' => $stay->id,
+                    'room_id' => $attributes['room_id'] ?? $stay->room_id,
+                    'issued_by' => $attributes['issued_by'] ?? null,
+                    'issued_at' => now(),
+                    'due_at' => $attributes['due_at'] ?? null,
+                    'status' => $attributes['status'] ?? InvoiceStatus::Unpaid->value,
+                    'tax_amount' => $attributes['tax_amount'] ?? 0,
+                    'discount_amount' => $attributes['discount_amount'] ?? 0,
+                    'notes' => $attributes['notes'] ?? 'Dossier de facturation du sejour.',
+                ]);
+            }
+
+            return $this->syncAccommodationCharge($invoice, $stay);
+        });
+    }
+
+    public function syncAccommodationCharge(Invoice $invoice, Stay $stay): Invoice
+    {
+        $stay->loadMissing('room');
+
+        $nights = $this->billableNights($stay);
+        $nightlyRate = (float) $stay->nightly_rate;
+        $description = $this->accommodationDescription($stay);
+
+        $item = $invoice->items()
+            ->whereNull('order_item_id')
+            ->where('description', $description)
+            ->first();
+
+        if ($nights <= 0 || $nightlyRate <= 0) {
+            if ($item) {
+                $item->delete();
+            }
+
+            return $this->recalculateTotals($invoice->fresh('items'));
+        }
+
+        $invoice->items()->updateOrCreate(
+            [
+                'order_item_id' => null,
+                'description' => $description,
+            ],
+            [
+                'quantity' => $nights,
+                'unit_price' => $nightlyRate,
+                'line_total' => $nights * $nightlyRate,
+            ]
+        );
+
+        return $this->recalculateTotals($invoice->fresh('items'));
+    }
+
     /**
-     * @param list<Order> $orders
+     * @param  list<Order>  $orders
      */
     public function createFromOrders(array $orders, array $attributes = []): Invoice
     {
@@ -89,8 +161,23 @@ class InvoiceService
         return $invoice->fresh(['items', 'payments']);
     }
 
+    private function billableNights(Stay $stay): int
+    {
+        $checkIn = Carbon::parse($stay->check_in_at)->startOfDay();
+        $checkOut = Carbon::parse($stay->expected_check_out_at ?? $stay->check_out_at ?? now())->startOfDay();
+
+        return max(1, (int) $checkIn->diffInDays($checkOut));
+    }
+
+    private function accommodationDescription(Stay $stay): string
+    {
+        $roomNumber = $stay->room?->number ? ' chambre '.$stay->room->number : '';
+
+        return 'Hebergement sejour #'.$stay->id.$roomNumber;
+    }
+
     private function generateReference(): string
     {
-        return 'INV-' . now()->format('Ymd-His') . '-' . Str::upper(Str::random(4));
+        return 'INV-'.now()->format('Ymd-His').'-'.Str::upper(Str::random(4));
     }
 }
