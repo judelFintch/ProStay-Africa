@@ -31,6 +31,8 @@ class Manager extends Component
 
     public int $extend_nights = 1;
 
+    public ?string $invoice_notice = null;
+
     public function createReservation(): void
     {
         $this->validate([
@@ -147,6 +149,24 @@ class Manager extends Component
         $stay->reservation?->update([
             'status' => ReservationStatus::CheckedOut->value,
         ]);
+    }
+
+    public function prepareInvoice(int $stayId): void
+    {
+        $stay = Stay::query()->with(['room', 'reservation'])->findOrFail($stayId);
+
+        if ($stay->status !== StayStatus::Active) {
+            return;
+        }
+
+        $invoice = app(InvoiceService::class)->openFolderForStay($stay, [
+            'customer_id' => $stay->customer_id,
+            'room_id' => $stay->room_id,
+            'issued_by' => Auth::id(),
+        ]);
+
+        $this->invoice_notice = 'Facture '.$invoice->reference.' preparee. Reste a payer: '.number_format((float) $invoice->balance, 2, '.', ' ').'.';
+        $this->resetErrorBag('checkout');
     }
 
     public function render()

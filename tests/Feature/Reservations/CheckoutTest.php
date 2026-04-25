@@ -83,6 +83,27 @@ class CheckoutTest extends TestCase
         $this->assertSame(0.0, (float) $invoice->fresh()->balance);
     }
 
+    public function test_reception_can_prepare_stay_invoice_before_checkout(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $stay = $this->createActiveStay();
+
+        Livewire::test(Manager::class)
+            ->call('prepareInvoice', $stay->id)
+            ->assertHasNoErrors()
+            ->assertSet('invoice_notice', fn (?string $notice): bool => $notice !== null
+                && str_contains($notice, 'Reste a payer: 90 000.00'));
+
+        $invoice = Invoice::query()->where('stay_id', $stay->id)->firstOrFail();
+
+        $this->assertSame(90000.0, (float) $invoice->total);
+        $this->assertSame(90000.0, (float) $invoice->balance);
+        $this->assertSame('active', $stay->fresh()->status->value);
+        $this->assertSame('occupied', $stay->room->fresh()->status->value);
+    }
+
     private function createActiveStay(): Stay
     {
         $customer = Customer::query()->create([

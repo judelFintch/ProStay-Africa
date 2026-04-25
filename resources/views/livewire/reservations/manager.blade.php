@@ -117,6 +117,12 @@
             </div>
         @enderror
 
+        @if($invoice_notice)
+            <div class="border-b border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-semibold text-emerald-700 sm:px-6">
+                {{ $invoice_notice }}
+            </div>
+        @endif
+
         <div class="border-b border-slate-200 px-5 py-3 sm:px-6">
             <div class="flex flex-wrap items-end gap-3">
                 <div>
@@ -163,6 +169,7 @@
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap gap-2">
                                     <button wire:click="extendStay({{ $stay->id }})" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-500">Extend</button>
+                                    <button wire:click="prepareInvoice({{ $stay->id }})" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700">Prepare invoice</button>
                                     <button wire:click="checkOut({{ $stay->id }})" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-600">Check-out</button>
                                 </div>
                             </td>
