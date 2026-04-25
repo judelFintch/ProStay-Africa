@@ -337,9 +337,21 @@ class Manager extends Component
 
     public function render()
     {
+        $rooms = $this->availableRoomsForPeriod(
+            checkInDate: $this->check_in_date,
+            checkOutDate: $this->check_out_date,
+        );
+
+        $editRooms = $this->availableRoomsForPeriod(
+            checkInDate: $this->edit_check_in_date,
+            checkOutDate: $this->edit_check_out_date,
+            ignoredReservationId: $this->edit_reservation_id,
+        );
+
         return view('livewire.reservations.manager', [
             'customers' => Customer::query()->orderBy('full_name')->limit(150)->get(),
-            'rooms' => Room::query()->orderBy('number')->get(),
+            'rooms' => $rooms,
+            'editRooms' => $editRooms,
             'reservations' => Reservation::query()->with(['customer', 'room'])->latest()->limit(20)->get(),
             'activeStays' => Stay::query()->with(['customer', 'room', 'invoices'])->where('status', StayStatus::Active->value)->latest()->limit(20)->get(),
             'checkedInValue' => ReservationStatus::CheckedIn->value,
@@ -425,5 +437,58 @@ class Manager extends Component
         if ($hasRoomConflict) {
             throw new RuntimeException('Cette chambre est deja occupee par un sejour actif.');
         }
+    }
+
+    private function availableRoomsForPeriod(
+        ?string $checkInDate,
+        ?string $checkOutDate,
+        ?int $ignoredReservationId = null,
+    ) {
+        $query = Room::query()->with('roomType')->orderBy('number');
+
+        if (! $checkInDate || ! $checkOutDate) {
+            return $query->get();
+        }
+
+        try {
+            $checkIn = Carbon::parse($checkInDate)->startOfDay();
+            $checkOut = Carbon::parse($checkOutDate)->startOfDay();
+        } catch (\Throwable) {
+            return $query->get();
+        }
+
+        if ($checkOut->lessThanOrEqualTo($checkIn)) {
+            return $query->get();
+        }
+
+        return $query
+            ->whereNotIn('status', [
+                RoomStatus::Maintenance->value,
+                RoomStatus::Occupied->value,
+            ])
+            ->whereDoesntHave('reservations', function ($reservationQuery) use ($checkIn, $checkOut, $ignoredReservationId): void {
+                $reservationQuery
+                    ->whereIn('status', [
+                        ReservationStatus::Pending->value,
+                        ReservationStatus::Confirmed->value,
+                        ReservationStatus::CheckedIn->value,
+                    ])
+                    ->where('check_in_date', '<', $checkOut->toDateString())
+                    ->where('check_out_date', '>', $checkIn->toDateString());
+
+                if ($ignoredReservationId) {
+                    $reservationQuery->whereKeyNot($ignoredReservationId);
+                }
+            })
+            ->whereDoesntHave('stays', function ($stayQuery) use ($checkIn, $checkOut): void {
+                $stayQuery
+                    ->where('status', StayStatus::Active->value)
+                    ->where('check_in_at', '<', $checkOut->copy()->endOfDay())
+                    ->where(function ($nested) use ($checkIn): void {
+                        $nested->whereNull('expected_check_out_at')
+                            ->orWhere('expected_check_out_at', '>', $checkIn);
+                    });
+            })
+            ->get();
     }
 }

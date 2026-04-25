@@ -85,7 +85,7 @@
                     <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Room</label>
                     <select wire:model="edit_room_id" class="w-full rounded-xl border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
                         <option value="">Select room</option>
-                        @foreach($rooms as $room)
+                        @foreach($editRooms as $room)
                             <option value="{{ $room->id }}">Room {{ $room->number }} ({{ $room->status->value }})</option>
                         @endforeach
                     </select>

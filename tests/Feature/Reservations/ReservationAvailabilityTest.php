@@ -136,7 +136,62 @@ class ReservationAvailabilityTest extends TestCase
         $this->assertDatabaseCount('reservations', 0);
     }
 
-    private function createRoom(int $capacity = 2, string $status = 'available'): Room
+    public function test_room_selector_filters_unavailable_rooms_for_selected_dates(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $customer = Customer::query()->create([
+            'full_name' => 'Client Filtre',
+            'is_identified' => true,
+        ]);
+        $bookedRoom = $this->createRoom(number: '401');
+        $availableRoom = $this->createRoom(number: '402');
+
+        Reservation::query()->create([
+            'customer_id' => $customer->id,
+            'room_id' => $bookedRoom->id,
+            'check_in_date' => now()->addDay()->toDateString(),
+            'check_out_date' => now()->addDays(3)->toDateString(),
+            'adults' => 1,
+            'children' => 0,
+            'status' => 'confirmed',
+        ]);
+
+        Livewire::test(Manager::class)
+            ->set('check_in_date', now()->addDays(2)->toDateString())
+            ->set('check_out_date', now()->addDays(4)->toDateString())
+            ->assertViewHas('rooms', fn ($rooms): bool => $rooms->contains($availableRoom)
+                && ! $rooms->contains($bookedRoom));
+    }
+
+    public function test_edit_room_selector_keeps_current_reservation_room_available(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $customer = Customer::query()->create([
+            'full_name' => 'Client Filtre Edition',
+            'is_identified' => true,
+        ]);
+        $room = $this->createRoom(number: '501');
+
+        $reservation = Reservation::query()->create([
+            'customer_id' => $customer->id,
+            'room_id' => $room->id,
+            'check_in_date' => now()->addDay()->toDateString(),
+            'check_out_date' => now()->addDays(3)->toDateString(),
+            'adults' => 1,
+            'children' => 0,
+            'status' => 'confirmed',
+        ]);
+
+        Livewire::test(Manager::class)
+            ->call('startEdit', $reservation->id)
+            ->assertViewHas('editRooms', fn ($rooms): bool => $rooms->contains($room));
+    }
+
+    private function createRoom(int $capacity = 2, string $status = 'available', ?string $number = null): Room
     {
         $roomType = RoomType::query()->create([
             'name' => 'Standard',
@@ -147,7 +202,7 @@ class ReservationAvailabilityTest extends TestCase
 
         return Room::query()->create([
             'room_type_id' => $roomType->id,
-            'number' => (string) random_int(100, 999),
+            'number' => $number ?? (string) random_int(100, 999),
             'capacity' => $capacity,
             'price' => 30000,
             'status' => $status,
