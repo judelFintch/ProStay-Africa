@@ -80,34 +80,42 @@ class Manager extends Component
 
     public function checkIn(int $reservationId): void
     {
-        $reservation = Reservation::query()->with('room')->findOrFail($reservationId);
+        try {
+            DB::transaction(function () use ($reservationId): void {
+                $reservation = Reservation::query()->with('room')->lockForUpdate()->findOrFail($reservationId);
 
-        if ($reservation->status === ReservationStatus::CheckedIn) {
-            return;
+                if ($reservation->status === ReservationStatus::CheckedIn) {
+                    return;
+                }
+
+                $this->ensureReservationCanCheckIn($reservation);
+
+                $reservation->update([
+                    'status' => ReservationStatus::CheckedIn->value,
+                ]);
+
+                Stay::query()->firstOrCreate(
+                    [
+                        'reservation_id' => $reservation->id,
+                    ],
+                    [
+                        'customer_id' => $reservation->customer_id,
+                        'room_id' => $reservation->room_id,
+                        'check_in_at' => now(),
+                        'expected_check_out_at' => $reservation->check_out_date,
+                        'status' => StayStatus::Active->value,
+                        'nightly_rate' => $reservation->room->price,
+                        'notes' => 'Checked-in from reservation',
+                    ]
+                );
+
+                $reservation->room->update([
+                    'status' => RoomStatus::Occupied->value,
+                ]);
+            });
+        } catch (RuntimeException $exception) {
+            $this->addError('checkin', $exception->getMessage());
         }
-
-        $reservation->update([
-            'status' => ReservationStatus::CheckedIn->value,
-        ]);
-
-        Stay::query()->firstOrCreate(
-            [
-                'reservation_id' => $reservation->id,
-            ],
-            [
-                'customer_id' => $reservation->customer_id,
-                'room_id' => $reservation->room_id,
-                'check_in_at' => now(),
-                'expected_check_out_at' => $reservation->check_out_date,
-                'status' => StayStatus::Active->value,
-                'nightly_rate' => $reservation->room->price,
-                'notes' => 'Checked-in from reservation',
-            ]
-        );
-
-        $reservation->room->update([
-            'status' => RoomStatus::Occupied->value,
-        ]);
     }
 
     public function cancel(int $reservationId): void
@@ -236,6 +244,34 @@ class Manager extends Component
 
         if ($hasReservationConflict || $hasActiveStayConflict) {
             throw new RuntimeException('Cette chambre est deja reservee ou occupee sur la periode demandee.');
+        }
+    }
+
+    private function ensureReservationCanCheckIn(Reservation $reservation): void
+    {
+        if (in_array($reservation->status, [
+            ReservationStatus::Cancelled,
+            ReservationStatus::CheckedOut,
+            ReservationStatus::NoShow,
+        ], true)) {
+            throw new RuntimeException('Cette reservation ne peut plus etre transformee en sejour.');
+        }
+
+        if ($reservation->room->status === RoomStatus::Maintenance) {
+            throw new RuntimeException('Cette chambre est actuellement en maintenance.');
+        }
+
+        $hasRoomConflict = Stay::query()
+            ->where('room_id', $reservation->room_id)
+            ->where('status', StayStatus::Active->value)
+            ->where(function ($query) use ($reservation): void {
+                $query->whereNull('reservation_id')
+                    ->orWhere('reservation_id', '!=', $reservation->id);
+            })
+            ->exists();
+
+        if ($hasRoomConflict) {
+            throw new RuntimeException('Cette chambre est deja occupee par un sejour actif.');
         }
     }
 }

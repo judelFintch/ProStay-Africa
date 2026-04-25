@@ -67,6 +67,12 @@
             <h2 class="text-lg font-bold text-slate-900">{{ __('Recent reservations') }}</h2>
         </div>
 
+        @error('checkin')
+            <div class="border-b border-rose-200 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700 sm:px-6">
+                {{ $message }}
+            </div>
+        @enderror
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-sm">
                 <thead class="bg-slate-50">
