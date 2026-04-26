@@ -53,7 +53,7 @@
             <livewire:layout.navigation />
 
             <div class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 backdrop-blur">
-                <div class="mx-auto flex max-w-7xl justify-end px-4 py-2 sm:px-6 lg:px-8">
+                <div class="mx-auto flex max-w-7xl justify-end gap-2 px-4 py-2 sm:px-6 lg:px-8">
                     <a
                         href="{{ route('dashboard') }}"
                         wire:navigate
@@ -61,6 +61,14 @@
                     >
                         <i class="fa-solid fa-house w-4 text-center text-slate-400"></i>
                         <span>Dashboard</span>
+                    </a>
+                    <a
+                        href="{{ route('orders.tracking') }}"
+                        wire:navigate
+                        class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-800 shadow-sm transition hover:bg-amber-100"
+                    >
+                        <i class="fa-solid fa-table-list w-4 text-center"></i>
+                        <span>Suivi commandes</span>
                     </a>
                 </div>
             </div>

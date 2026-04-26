@@ -23,7 +23,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('reservations', 'pages.reservations')->name('reservations.index');
     Route::view('rooms', 'pages.rooms')->name('rooms.index');
     Route::view('orders', 'pages.orders')->name('orders.create');
+    Route::view('orders/tracking', 'pages.order-tracking')->name('orders.tracking');
     Route::view('dishes', 'pages.dishes')->name('dishes.index');
+    Route::view('servers', 'pages.servers')->name('servers.index');
     Route::view('billing/invoices', 'pages.billing')->name('billing.invoices');
     Route::view('billing/payments', 'pages.payments')->name('billing.payments');
     Route::view('stock', 'pages.stock')->name('stock.index');

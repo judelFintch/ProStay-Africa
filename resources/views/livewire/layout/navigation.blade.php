@@ -19,13 +19,15 @@ new class extends Component
 <nav x-data="{ open: false }" class="relative z-40">
     @php
         $links = [
+            ['label' => __('Suivi commandes'), 'route' => 'orders.tracking', 'match' => 'orders.tracking', 'icon' => 'fa-table-list', 'highlight' => true],
             ['label' => __('Dashboard'), 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'fa-chart-line'],
             ['label' => __('Reception'), 'route' => 'hotel.reception', 'match' => 'hotel.*', 'icon' => 'fa-concierge-bell'],
             ['label' => __('Customers'), 'route' => 'customers.index', 'match' => 'customers.*', 'icon' => 'fa-users'],
             ['label' => __('Reservations'), 'route' => 'reservations.index', 'match' => 'reservations.*', 'icon' => 'fa-calendar-check'],
             ['label' => __('Rooms'), 'route' => 'rooms.index', 'match' => 'rooms.*', 'icon' => 'fa-bed'],
-            ['label' => __('Orders'), 'route' => 'orders.create', 'match' => 'orders.*', 'icon' => 'fa-utensils'],
+            ['label' => __('Orders'), 'route' => 'orders.create', 'match' => 'orders.create', 'icon' => 'fa-utensils'],
             ['label' => __('Plats'), 'route' => 'dishes.index', 'match' => 'dishes.*', 'icon' => 'fa-bowl-food'],
+            ['label' => __('Servers'), 'route' => 'servers.index', 'match' => 'servers.*', 'icon' => 'fa-user-tie'],
             ['label' => __('Invoices'), 'route' => 'billing.invoices', 'match' => 'billing.invoices', 'icon' => 'fa-file-invoice'],
             ['label' => __('Payments'), 'route' => 'billing.payments', 'match' => 'billing.payments', 'icon' => 'fa-wallet'],
             ['label' => __('Stock'), 'route' => 'stock.index', 'match' => 'stock.*', 'icon' => 'fa-boxes-stacked'],
@@ -72,12 +74,13 @@ new class extends Component
                     @foreach($links as $link)
                         @php
                             $isActive = request()->routeIs($link['match']);
+                            $isHighlighted = $link['highlight'] ?? false;
                         @endphp
                         <a
                             href="{{ route($link['route']) }}"
                             wire:navigate
                             @click="open = false"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ $isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ $isActive ? 'bg-slate-900 text-white' : ($isHighlighted ? 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900') }}"
                         >
                             <i class="fa-solid {{ $link['icon'] }} w-4 text-center"></i>
                             <span>{{ $link['label'] }}</span>
@@ -150,11 +153,12 @@ new class extends Component
                     @foreach($links as $link)
                         @php
                             $isActive = request()->routeIs($link['match']);
+                            $isHighlighted = $link['highlight'] ?? false;
                         @endphp
                         <a
                             href="{{ route($link['route']) }}"
                             wire:navigate
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ $isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}"
+                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ $isActive ? 'bg-slate-900 text-white' : ($isHighlighted ? 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900') }}"
                         >
                             <i class="fa-solid {{ $link['icon'] }} w-4 text-center"></i>
                             <span>{{ $link['label'] }}</span>
