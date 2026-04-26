@@ -31,11 +31,17 @@
 
             <div class="space-y-3">
                 @foreach($items as $index => $item)
-                    <div class="grid gap-3 md:grid-cols-[1.3fr_1.8fr_1fr_1fr_auto]">
+                    <div class="grid gap-3 md:grid-cols-[1.1fr_1.1fr_1.8fr_1fr_1fr_auto]">
                         <select wire:model="items.{{ $index }}.product_id" class="prostay-input">
                             <option value="">Product (optional)</option>
                             @foreach($products as $product)
                                 <option value="{{ $product->id }}">{{ $product->name }}</option>
+                            @endforeach
+                        </select>
+                        <select wire:model="items.{{ $index }}.menu_id" class="prostay-input">
+                            <option value="">Plat (optionnel)</option>
+                            @foreach($menus as $menu)
+                                <option value="{{ $menu->id }}">{{ $menu->name }} - {{ number_format((float) $menu->price, 2, '.', ' ') }}</option>
                             @endforeach
                         </select>
                         <input type="text" wire:model="items.{{ $index }}.item_name" placeholder="Item name" class="prostay-input" />

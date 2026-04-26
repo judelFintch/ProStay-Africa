@@ -5,9 +5,11 @@ namespace App\Livewire\Orders;
 use App\Enums\CustomerType;
 use App\Enums\OrderStatus;
 use App\Models\Customer;
+use App\Models\Menu;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ServiceArea;
+use App\Services\Menu\MenuRecipeService;
 use App\Services\Orders\OrderService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -18,13 +20,13 @@ class CreateOrder extends Component
     public ?int $customer_id = null;
     public string $customer_type = 'walk_in_anonymous';
     public array $items = [
-        ['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0],
+        ['product_id' => null, 'menu_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0],
     ];
     public ?string $notes = null;
 
     public function addItemRow(): void
     {
-        $this->items[] = ['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0];
+        $this->items[] = ['product_id' => null, 'menu_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0];
     }
 
     public function removeItemRow(int $index): void
@@ -41,12 +43,25 @@ class CreateOrder extends Component
             'customer_type' => ['required', 'in:' . implode(',', array_column(CustomerType::cases(), 'value'))],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['nullable', 'exists:products,id'],
+            'items.*.menu_id' => ['nullable', 'exists:menus,id'],
             'items.*.item_name' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
         ]);
 
+        foreach ($this->items as $index => $item) {
+            if (! empty($item['menu_id'])) {
+                $menu = Menu::query()->with('ingredients.product')->find($item['menu_id']);
+                $availability = $menu ? app(MenuRecipeService::class)->availability($menu, (float) ($item['quantity'] ?? 1)) : null;
+
+                if (! $availability || ! $availability['is_available']) {
+                    $this->addError("items.$index.menu_id", 'Plat indisponible: stock ingredient insuffisant.');
+
+                    return;
+                }
+            }
+        }
         $order = $orderService->create([
             'service_area_id' => $this->service_area_id,
             'customer_id' => $this->customer_id,
@@ -60,7 +75,7 @@ class CreateOrder extends Component
         $this->dispatch('order-created', reference: $order->reference);
         $this->reset(['customer_id', 'notes']);
         $this->customer_type = CustomerType::WalkInAnonymous->value;
-        $this->items = [['product_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0]];
+        $this->items = [['product_id' => null, 'menu_id' => null, 'item_name' => '', 'quantity' => 1, 'unit_price' => 0]];
     }
 
     public function render()
@@ -69,6 +84,7 @@ class CreateOrder extends Component
             'serviceAreas' => ServiceArea::query()->where('is_active', true)->orderBy('name')->get(),
             'customers' => Customer::query()->orderBy('full_name')->limit(100)->get(),
             'products' => Product::query()->where('is_active', true)->orderBy('name')->limit(200)->get(),
+            'menus' => Menu::query()->where('is_available', true)->orderBy('name')->limit(200)->get(),
             'recentOrders' => Order::query()->latest()->limit(10)->get(),
             'customerTypes' => array_column(CustomerType::cases(), 'value'),
         ]);

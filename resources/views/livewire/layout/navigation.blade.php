@@ -25,6 +25,7 @@ new class extends Component
             ['label' => __('Reservations'), 'route' => 'reservations.index', 'match' => 'reservations.*', 'icon' => 'fa-calendar-check'],
             ['label' => __('Rooms'), 'route' => 'rooms.index', 'match' => 'rooms.*', 'icon' => 'fa-bed'],
             ['label' => __('Orders'), 'route' => 'orders.create', 'match' => 'orders.*', 'icon' => 'fa-utensils'],
+            ['label' => __('Plats'), 'route' => 'dishes.index', 'match' => 'dishes.*', 'icon' => 'fa-bowl-food'],
             ['label' => __('Invoices'), 'route' => 'billing.invoices', 'match' => 'billing.invoices', 'icon' => 'fa-file-invoice'],
             ['label' => __('Payments'), 'route' => 'billing.payments', 'match' => 'billing.payments', 'icon' => 'fa-wallet'],
             ['label' => __('Stock'), 'route' => 'stock.index', 'match' => 'stock.*', 'icon' => 'fa-boxes-stacked'],

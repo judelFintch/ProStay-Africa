@@ -5,8 +5,10 @@ namespace App\Services\Orders;
 use App\Enums\CustomerType;
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Models\Menu;
 use App\Models\Product;
 use App\Services\Audit\AuditLogger;
+use App\Services\Menu\MenuRecipeService;
 use App\Services\Stock\StockService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -34,9 +36,10 @@ class OrderService
                 $quantity = (float) Arr::get($item, 'quantity', 1);
                 $unitPrice = (float) Arr::get($item, 'unit_price', 0);
                 $productId = Arr::get($item, 'product_id');
+                $menuId = Arr::get($item, 'menu_id');
 
                 $createdItem = $order->items()->create([
-                    'menu_id' => Arr::get($item, 'menu_id'),
+                    'menu_id' => $menuId,
                     'product_id' => $productId,
                     'item_name' => Arr::get($item, 'item_name', 'Item'),
                     'quantity' => $quantity,
@@ -54,6 +57,18 @@ class OrderService
                             unitCost: (float) $product->unit_cost,
                             userId: Arr::get($payload, 'created_by'),
                             reason: 'Order ' . $order->reference . ' / item #' . $createdItem->id
+                        );
+                    }
+                }
+
+                if ($menuId) {
+                    $menu = Menu::query()->with('ingredients.product')->lockForUpdate()->find($menuId);
+                    if ($menu) {
+                        app(MenuRecipeService::class)->deductIngredients(
+                            menu: $menu,
+                            servings: $quantity,
+                            userId: Arr::get($payload, 'created_by'),
+                            reason: 'Order ' . $order->reference . ' / dish #' . $createdItem->id
                         );
                     }
                 }

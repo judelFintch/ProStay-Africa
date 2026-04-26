@@ -51,4 +51,9 @@ class Product extends Model
     {
         return $this->hasMany(StockMovement::class);
     }
+
+    public function menuIngredients(): HasMany
+    {
+        return $this->hasMany(MenuIngredient::class);
+    }
 }
