@@ -42,6 +42,7 @@ class Customer extends Model
         'vip_status',
         'blacklisted',
         'is_identified',
+        'travel_type',
     ];
 
     protected function casts(): array

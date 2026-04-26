@@ -21,7 +21,9 @@ class Order extends Model
         'room_id',
         'dining_table_id',
         'created_by',
+        'served_by',
         'customer_type',
+        'external_label',
         'status',
         'notes',
         'subtotal',
@@ -66,6 +68,11 @@ class Order extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function server(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'served_by');
     }
 
     public function items(): HasMany

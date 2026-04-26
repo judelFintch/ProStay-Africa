@@ -23,6 +23,28 @@ class Overview extends Component
         $todayRevenue = (float) Payment::query()
             ->whereDate('paid_at', today())
             ->sum('amount');
+        $restaurantExternalRevenue = (float) Payment::query()
+            ->whereDate('paid_at', today())
+            ->whereHas('invoice', function ($query): void {
+                $query->whereNull('stay_id')
+                    ->whereNull('room_id')
+                    ->whereHas('items.orderItem.order.serviceArea', function ($areaQuery): void {
+                        $areaQuery->whereIn('code', ['restaurant', 'bar', 'terrace']);
+                    });
+            })
+            ->sum('amount');
+        $restaurantHotelTransferBalance = (float) Invoice::query()
+            ->whereIn('status', [
+                InvoiceStatus::Unpaid->value,
+                InvoiceStatus::PartiallyPaid->value,
+            ])
+            ->where(function ($query): void {
+                $query->whereNotNull('stay_id')->orWhereNotNull('room_id');
+            })
+            ->whereHas('items.orderItem.order.serviceArea', function ($areaQuery): void {
+                $areaQuery->whereIn('code', ['restaurant', 'bar', 'terrace']);
+            })
+            ->sum('balance');
 
         $openInvoices = Invoice::query()->whereIn('status', [
             InvoiceStatus::Unpaid->value,
@@ -42,6 +64,8 @@ class Overview extends Component
             'activeStays' => $activeStays,
             'occupancy' => $occupancy,
             'todayRevenue' => $todayRevenue,
+            'restaurantExternalRevenue' => $restaurantExternalRevenue,
+            'restaurantHotelTransferBalance' => $restaurantHotelTransferBalance,
             'openInvoices' => $openInvoices,
             'ordersToday' => $ordersToday,
             'serviceAreaLoad' => $serviceAreaLoad,

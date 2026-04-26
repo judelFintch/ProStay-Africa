@@ -4,6 +4,7 @@ namespace App\Services\Billing;
 
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Order;
 use App\Models\Stay;
 use App\Services\Audit\AuditLogger;
@@ -13,6 +14,28 @@ use Illuminate\Support\Str;
 
 class InvoiceService
 {
+    public function openFolderForOrder(Order $order, array $attributes = []): Invoice
+    {
+        return DB::transaction(function () use ($order, $attributes): Invoice {
+            $invoice = $this->findReusableInvoice($order, $attributes);
+
+            if (! $invoice) {
+                return $this->createFromOrders([$order->fresh('items')], [
+                    'customer_id' => $attributes['customer_id'] ?? $order->customer_id,
+                    'stay_id' => $attributes['stay_id'] ?? $order->stay_id,
+                    'room_id' => $attributes['room_id'] ?? $order->room_id,
+                    'issued_by' => $attributes['issued_by'] ?? null,
+                    'status' => $attributes['status'] ?? InvoiceStatus::Draft->value,
+                    'notes' => $attributes['notes'] ?? 'Dossier de facturation ouvert depuis la prise de commande.',
+                ]);
+            }
+
+            $this->appendOrderToInvoice($invoice, $order);
+
+            return $this->recalculateTotals($invoice->fresh('items'));
+        });
+    }
+
     public function openFolderForStay(Stay $stay, array $attributes = []): Invoice
     {
         return DB::transaction(function () use ($stay, $attributes): Invoice {
@@ -159,6 +182,61 @@ class InvoiceService
         ])->save();
 
         return $invoice->fresh(['items', 'payments']);
+    }
+
+    public function appendOrderToInvoice(Invoice $invoice, Order $order): void
+    {
+        $order->loadMissing('items');
+
+        foreach ($order->items as $orderItem) {
+            $alreadyLinked = InvoiceItem::query()
+                ->where('invoice_id', $invoice->id)
+                ->where('order_item_id', $orderItem->id)
+                ->exists();
+
+            if ($alreadyLinked) {
+                continue;
+            }
+
+            $invoice->items()->create([
+                'order_item_id' => $orderItem->id,
+                'description' => $orderItem->item_name,
+                'quantity' => $orderItem->quantity,
+                'unit_price' => $orderItem->unit_price,
+                'line_total' => $orderItem->line_total,
+            ]);
+        }
+    }
+
+    /**
+     * @param  list<Order>  $orders
+     */
+    public function appendOrdersToInvoice(Invoice $invoice, array $orders): Invoice
+    {
+        return DB::transaction(function () use ($invoice, $orders): Invoice {
+            foreach ($orders as $order) {
+                $this->appendOrderToInvoice($invoice, $order);
+            }
+
+            return $this->recalculateTotals($invoice->fresh('items'));
+        });
+    }
+
+    private function findReusableInvoice(Order $order, array $attributes = []): ?Invoice
+    {
+        if (! ($attributes['stay_id'] ?? $order->stay_id)) {
+            return null;
+        }
+
+        return Invoice::query()
+            ->where('stay_id', $attributes['stay_id'] ?? $order->stay_id)
+            ->whereIn('status', [
+                InvoiceStatus::Draft->value,
+                InvoiceStatus::Unpaid->value,
+                InvoiceStatus::PartiallyPaid->value,
+            ])
+            ->latest('issued_at')
+            ->first();
     }
 
     private function billableNights(Stay $stay): int
