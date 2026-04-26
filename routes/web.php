@@ -17,6 +17,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::view('hotel', 'pages.hotel')->name('hotel.reception');
     Route::view('customers', 'pages.customers')->name('customers.index');
     Route::view('customers/registry', 'pages.customers-registry')->name('customers.registry');
     Route::view('reservations', 'pages.reservations')->name('reservations.index');

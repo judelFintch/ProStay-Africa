@@ -20,6 +20,7 @@ new class extends Component
     @php
         $links = [
             ['label' => __('Dashboard'), 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'fa-chart-line'],
+            ['label' => __('Reception'), 'route' => 'hotel.reception', 'match' => 'hotel.*', 'icon' => 'fa-concierge-bell'],
             ['label' => __('Customers'), 'route' => 'customers.index', 'match' => 'customers.*', 'icon' => 'fa-users'],
             ['label' => __('Reservations'), 'route' => 'reservations.index', 'match' => 'reservations.*', 'icon' => 'fa-calendar-check'],
             ['label' => __('Rooms'), 'route' => 'rooms.index', 'match' => 'rooms.*', 'icon' => 'fa-bed'],
