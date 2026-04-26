@@ -27,6 +27,7 @@ class Invoice extends Model
         'total',
         'paid_total',
         'balance',
+        'currency',
         'notes',
     ];
 

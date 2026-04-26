@@ -15,11 +15,11 @@
                     </div>
                     <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
                         <p class="text-[11px] uppercase tracking-wide text-rose-700">Solde externe</p>
-                        <p class="mt-1 text-sm font-semibold text-rose-800">{{ number_format($stats['open_balance'], 2, '.', ' ') }}</p>
+                        <p class="mt-1 text-sm font-semibold text-rose-800">{{ number_format($stats['open_balance'], 2, '.', ' ') }} {{ $stats['currency'] }}</p>
                     </div>
                     <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
                         <p class="text-[11px] uppercase tracking-wide text-emerald-700">Encaisse aujourd hui</p>
-                        <p class="mt-1 text-sm font-semibold text-emerald-800">{{ number_format($stats['paid_today'], 2, '.', ' ') }}</p>
+                        <p class="mt-1 text-sm font-semibold text-emerald-800">{{ number_format($stats['paid_today'], 2, '.', ' ') }} {{ $stats['currency'] }}</p>
                     </div>
                 </div>
             </div>
@@ -39,7 +39,7 @@
                     <select wire:model.live="invoice_id" class="prostay-input">
                         <option value="">Selectionner une facture</option>
                         @foreach($openInvoices as $invoice)
-                            <option value="{{ $invoice->id }}">{{ $invoice->reference }} - solde {{ number_format($invoice->balance, 2, '.', ' ') }}</option>
+                            <option value="{{ $invoice->id }}">{{ $invoice->reference }} - solde {{ number_format($invoice->balance, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</option>
                         @endforeach
                     </select>
                     @error('invoice_id') <p class="mt-2 text-xs font-semibold text-rose-700">{{ $message }}</p> @enderror
@@ -47,14 +47,20 @@
 
                 <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px]">
                     <div class="rounded-lg border border-slate-200 p-4">
-                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Montant recu</label>
-                        <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Montant recu ({{ strtoupper($currency) }})</label>
+                        <div class="grid gap-2 sm:grid-cols-[140px_minmax(0,1fr)_auto]">
+                            <select wire:model.live="currency" class="prostay-input">
+                                @foreach($supportedCurrencies as $supportedCurrency)
+                                    <option value="{{ $supportedCurrency }}">{{ $supportedCurrency }}</option>
+                                @endforeach
+                            </select>
                             <input type="number" wire:model.live="amount" step="0.01" min="0.01" class="prostay-input text-lg font-bold" placeholder="0.00" />
                             <button type="button" wire:click="payFullBalance" class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
                                 <i class="fa-solid fa-check-double"></i>
                                 Solde exact
                             </button>
                         </div>
+                        @error('currency') <p class="mt-2 text-xs font-semibold text-rose-700">{{ $message }}</p> @enderror
                         @error('amount') <p class="mt-2 text-xs font-semibold text-rose-700">{{ $message }}</p> @enderror
                     </div>
 
@@ -109,16 +115,16 @@
                         </div>
                         <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-3">
                             <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-700">Solde restant</p>
-                            <p class="mt-1 text-2xl font-black text-rose-800">{{ number_format((float) $selectedInvoice->balance, 2, '.', ' ') }}</p>
+                            <p class="mt-1 text-2xl font-black text-rose-800">{{ number_format((float) $selectedInvoice->balance, 2, '.', ' ') }} {{ strtoupper((string) $selectedInvoice->currency) }}</p>
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-sm">
                             <div class="rounded-lg bg-slate-50 px-3 py-2">
                                 <p class="text-xs text-slate-500">Total</p>
-                                <p class="font-semibold text-slate-900">{{ number_format((float) $selectedInvoice->total, 2, '.', ' ') }}</p>
+                                <p class="font-semibold text-slate-900">{{ number_format((float) $selectedInvoice->total, 2, '.', ' ') }} {{ strtoupper((string) $selectedInvoice->currency) }}</p>
                             </div>
                             <div class="rounded-lg bg-slate-50 px-3 py-2">
                                 <p class="text-xs text-slate-500">Deja paye</p>
-                                <p class="font-semibold text-slate-900">{{ number_format((float) $selectedInvoice->paid_total, 2, '.', ' ') }}</p>
+                                <p class="font-semibold text-slate-900">{{ number_format((float) $selectedInvoice->paid_total, 2, '.', ' ') }} {{ strtoupper((string) $selectedInvoice->currency) }}</p>
                             </div>
                         </div>
                         @if($amount > (float) $selectedInvoice->balance)
@@ -155,7 +161,7 @@
                         <tr>
                             <td class="px-4 py-3 font-medium text-slate-900">{{ $payment->reference }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $payment->invoice?->reference ?? '-' }}</td>
-                            <td class="px-4 py-3 font-semibold text-slate-900">{{ number_format($payment->amount, 2, '.', ' ') }}</td>
+                            <td class="px-4 py-3 font-semibold text-slate-900">{{ number_format($payment->amount, 2, '.', ' ') }} {{ strtoupper((string) $payment->currency) }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $payment->method->value }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $payment->recorder?->name ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-700">{{ $payment->paid_at?->format('d/m/Y H:i') }}</td>

@@ -15,21 +15,21 @@
                     </div>
                     <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
                         <p class="text-[11px] uppercase tracking-wide text-amber-700">A facturer</p>
-                        <p class="mt-1 text-sm font-semibold text-amber-800">{{ number_format($stats['unbilled'], 2, '.', ' ') }}</p>
+                        <p class="mt-1 text-sm font-semibold text-amber-800">{{ number_format($stats['unbilled'], 2, '.', ' ') }} {{ $stats['currency'] }}</p>
                     </div>
                     <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
                         <p class="text-[11px] uppercase tracking-wide text-emerald-700">A encaisser</p>
-                        <p class="mt-1 text-sm font-semibold text-emerald-800">{{ number_format($stats['invoiced'], 2, '.', ' ') }}</p>
+                        <p class="mt-1 text-sm font-semibold text-emerald-800">{{ number_format($stats['invoiced'], 2, '.', ' ') }} {{ $stats['currency'] }}</p>
                     </div>
                     <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2">
                         <p class="text-[11px] uppercase tracking-wide text-rose-700">Total du</p>
-                        <p class="mt-1 text-sm font-semibold text-rose-800">{{ number_format($stats['due'], 2, '.', ' ') }}</p>
+                        <p class="mt-1 text-sm font-semibold text-rose-800">{{ number_format($stats['due'], 2, '.', ' ') }} {{ $stats['currency'] }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_220px_180px_auto] lg:items-end">
+        <div class="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_220px_180px_140px_auto] lg:items-end">
             <div>
                 <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Recherche</label>
                 <input type="search" wire:model.live.debounce.300ms="search" class="prostay-input" placeholder="Table, client, chambre, serveur..." />
@@ -50,6 +50,14 @@
                     <option value="table">Tables</option>
                     <option value="external">Clients externes</option>
                     <option value="hotel">Hotel</option>
+                </select>
+            </div>
+            <div>
+                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Devise</label>
+                <select wire:model.live="currency_filter" class="prostay-input">
+                    @foreach($supportedCurrencies as $supportedCurrency)
+                        <option value="{{ $supportedCurrency }}">{{ $supportedCurrency }}</option>
+                    @endforeach
                 </select>
             </div>
             <button type="button" wire:click="clearFilters" class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
@@ -80,7 +88,7 @@
                     <div class="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
                         <div>
                             <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Montant du</p>
-                            <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($card['due_total'], 2, '.', ' ') }}</p>
+                            <p class="mt-1 text-2xl font-black text-slate-900">{{ number_format($card['due_total'], 2, '.', ' ') }} {{ $card['currency'] }}</p>
                         </div>
                         <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $card['kind'] === 'table' ? 'bg-blue-100 text-blue-700' : ($card['kind'] === 'hotel' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700') }}">
                             {{ $card['kind'] === 'table' ? 'Table' : ($card['kind'] === 'hotel' ? 'Hotel' : 'Client') }}
@@ -90,11 +98,11 @@
                     <div class="mt-4 grid grid-cols-3 gap-2 text-xs">
                         <div class="rounded-lg bg-amber-50 px-2 py-2">
                             <p class="font-semibold text-amber-700">Non facture</p>
-                            <p class="mt-1 font-bold text-amber-900">{{ number_format($card['unbilled_total'], 2, '.', ' ') }}</p>
+                            <p class="mt-1 font-bold text-amber-900">{{ number_format($card['unbilled_total'], 2, '.', ' ') }} {{ $card['currency'] }}</p>
                         </div>
                         <div class="rounded-lg bg-emerald-50 px-2 py-2">
                             <p class="font-semibold text-emerald-700">Facture</p>
-                            <p class="mt-1 font-bold text-emerald-900">{{ number_format($card['invoice_balance'], 2, '.', ' ') }}</p>
+                            <p class="mt-1 font-bold text-emerald-900">{{ number_format($card['invoice_balance'], 2, '.', ' ') }} {{ $card['currency'] }}</p>
                         </div>
                         <div class="rounded-lg bg-slate-50 px-2 py-2">
                             <p class="font-semibold text-slate-500">Activite</p>
@@ -125,17 +133,17 @@
                     <div class="space-y-4 p-4">
                         <div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-3">
                             <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-700">Solde actuel</p>
-                            <p class="mt-1 text-3xl font-black text-rose-800">{{ number_format($selectedCard['due_total'], 2, '.', ' ') }}</p>
+                            <p class="mt-1 text-3xl font-black text-rose-800">{{ number_format($selectedCard['due_total'], 2, '.', ' ') }} {{ $selectedCard['currency'] }}</p>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2">
                             <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
                                 <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Commandes a facturer</p>
-                                <p class="mt-1 text-sm font-bold text-amber-900">{{ count($selectedCard['order_ids']) }} · {{ number_format($selectedCard['unbilled_total'], 2, '.', ' ') }}</p>
+                                <p class="mt-1 text-sm font-bold text-amber-900">{{ count($selectedCard['order_ids']) }} · {{ number_format($selectedCard['unbilled_total'], 2, '.', ' ') }} {{ $selectedCard['currency'] }}</p>
                             </div>
                             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
                                 <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Factures a encaisser</p>
-                                <p class="mt-1 text-sm font-bold text-emerald-900">{{ count($selectedCard['invoice_ids']) }} · {{ number_format($selectedCard['invoice_balance'], 2, '.', ' ') }}</p>
+                                <p class="mt-1 text-sm font-bold text-emerald-900">{{ count($selectedCard['invoice_ids']) }} · {{ number_format($selectedCard['invoice_balance'], 2, '.', ' ') }} {{ $selectedCard['currency'] }}</p>
                             </div>
                         </div>
 
@@ -151,7 +159,7 @@
                                     <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
                                         <div class="flex items-center justify-between gap-3 text-sm">
                                             <span class="font-semibold text-amber-950">{{ $order->reference }}</span>
-                                            <span class="font-bold text-amber-950">{{ number_format((float) $order->total, 2, '.', ' ') }}</span>
+                                            <span class="font-bold text-amber-950">{{ number_format((float) $order->total, 2, '.', ' ') }} {{ strtoupper((string) $order->currency) }}</span>
                                         </div>
                                         <p class="mt-1 text-xs text-amber-800">{{ $order->items->count() }} article(s) · {{ optional($order->created_at)->format('d/m H:i') }}</p>
                                     </div>
@@ -168,7 +176,7 @@
                                     <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                                         <div class="flex items-center justify-between gap-3 text-sm">
                                             <span class="font-semibold text-slate-900">{{ $invoice->reference }}</span>
-                                            <span class="font-bold text-slate-900">{{ number_format((float) $invoice->balance, 2, '.', ' ') }}</span>
+                                            <span class="font-bold text-slate-900">{{ number_format((float) $invoice->balance, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</span>
                                         </div>
                                         <p class="mt-1 text-xs text-slate-500">{{ $invoice->status->value }} · {{ $invoice->items->count() }} ligne(s)</p>
                                     </div>

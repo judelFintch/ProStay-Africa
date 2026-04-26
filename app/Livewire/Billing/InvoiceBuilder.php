@@ -4,6 +4,7 @@ namespace App\Livewire\Billing;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\CustomerType;
+use App\Enums\CurrencyCode;
 use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\ServiceArea;
@@ -67,6 +68,17 @@ class InvoiceBuilder extends Component
             return;
         }
 
+        $orderCurrencies = $orders
+            ->map(fn (Order $order): string => strtoupper((string) ($order->currency ?: CurrencyCode::default())))
+            ->unique()
+            ->values();
+
+        if ($orderCurrencies->count() > 1) {
+            $this->addError('selectedOrderIds', 'Tu ne peux pas facturer ensemble des commandes de devises differentes.');
+
+            return;
+        }
+
         if ($validated['build_mode'] === 'existing') {
             if (! $this->target_invoice_id) {
                 $this->addError('target_invoice_id', 'Selectionne une facture ouverte.');
@@ -107,6 +119,7 @@ class InvoiceBuilder extends Component
             'customer_id' => $this->customer_id ?: $orders->first()?->customer_id,
             'stay_id' => $this->stay_id ?: $orders->first()?->stay_id,
             'room_id' => $this->room_id ?: $orders->first()?->room_id,
+            'currency' => $orders->first()?->currency ?: CurrencyCode::default(),
             'issued_by' => Auth::id(),
         ];
 
@@ -127,6 +140,10 @@ class InvoiceBuilder extends Component
         }
 
         if ($invoice->customer_id && (int) $invoice->customer_id !== (int) $order->customer_id) {
+            return false;
+        }
+
+        if ($invoice->currency && strtoupper((string) $invoice->currency) !== strtoupper((string) ($order->currency ?: CurrencyCode::default()))) {
             return false;
         }
 

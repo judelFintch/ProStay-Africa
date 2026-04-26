@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Reports;
 
+use App\Enums\CurrencyCode;
 use App\Enums\InvoiceStatus;
 use App\Enums\StayStatus;
 use App\Models\Invoice;
@@ -16,15 +17,19 @@ class Overview extends Component
 {
     public function render()
     {
+        $reportCurrency = CurrencyCode::default();
+
         $totalRooms = Room::query()->count();
         $activeStays = Stay::query()->where('status', StayStatus::Active->value)->count();
         $occupancy = $totalRooms > 0 ? round(($activeStays / $totalRooms) * 100, 1) : 0;
 
         $todayRevenue = (float) Payment::query()
             ->whereDate('paid_at', today())
+            ->where('currency', $reportCurrency)
             ->sum('amount');
         $restaurantExternalRevenue = (float) Payment::query()
             ->whereDate('paid_at', today())
+            ->where('currency', $reportCurrency)
             ->whereHas('invoice', function ($query): void {
                 $query->whereNull('stay_id')
                     ->whereNull('room_id')
@@ -41,6 +46,7 @@ class Overview extends Component
             ->where(function ($query): void {
                 $query->whereNotNull('stay_id')->orWhereNotNull('room_id');
             })
+            ->where('currency', $reportCurrency)
             ->whereHas('items.orderItem.order.serviceArea', function ($areaQuery): void {
                 $areaQuery->whereIn('code', ['restaurant', 'bar', 'terrace']);
             })
@@ -69,6 +75,7 @@ class Overview extends Component
             'openInvoices' => $openInvoices,
             'ordersToday' => $ordersToday,
             'serviceAreaLoad' => $serviceAreaLoad,
+            'reportCurrency' => $reportCurrency,
         ]);
     }
 }

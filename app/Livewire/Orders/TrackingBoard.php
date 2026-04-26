@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Orders;
 
+use App\Enums\CurrencyCode;
 use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\Order;
@@ -14,12 +15,19 @@ class TrackingBoard extends Component
     public string $search = '';
     public ?int $service_area_id = null;
     public string $view_mode = 'all';
+    public string $currency_filter = 'USD';
     public ?string $selected_key = null;
+
+    public function mount(): void
+    {
+        $this->currency_filter = CurrencyCode::default();
+    }
 
     public function clearFilters(): void
     {
         $this->reset(['search', 'service_area_id', 'view_mode']);
         $this->view_mode = 'all';
+        $this->currency_filter = CurrencyCode::default();
     }
 
     public function render()
@@ -31,6 +39,7 @@ class TrackingBoard extends Component
                 InvoiceStatus::Unpaid->value,
                 InvoiceStatus::PartiallyPaid->value,
             ])
+            ->where('currency', strtoupper($this->currency_filter))
             ->latest('issued_at')
             ->limit(100)
             ->get();
@@ -41,6 +50,7 @@ class TrackingBoard extends Component
             ->whereHas('items', function ($query): void {
                 $query->whereDoesntHave('invoiceItems');
             })
+            ->where('currency', strtoupper($this->currency_filter))
             ->latest()
             ->limit(100)
             ->get();
@@ -62,11 +72,13 @@ class TrackingBoard extends Component
             'cards' => $cards,
             'selectedCard' => $selectedCard,
             'serviceAreas' => ServiceArea::query()->where('is_active', true)->orderBy('name')->get(),
+            'supportedCurrencies' => CurrencyCode::supported(),
             'stats' => [
                 'cards' => $cards->count(),
                 'due' => (float) $cards->sum('due_total'),
                 'unbilled' => (float) $cards->sum('unbilled_total'),
                 'invoiced' => (float) $cards->sum('invoice_balance'),
+                'currency' => strtoupper($this->currency_filter),
             ],
         ]);
     }
@@ -88,6 +100,7 @@ class TrackingBoard extends Component
                 ->values();
             $firstOrder = $relatedOrders->first();
             $key = $this->cardKey(
+                currency: strtoupper((string) $invoice->currency),
                 customerId: $invoice->customer_id,
                 stayId: $invoice->stay_id,
                 roomId: $invoice->room_id,
@@ -114,6 +127,7 @@ class TrackingBoard extends Component
 
         foreach ($unbilledOrders as $order) {
             $key = $this->cardKey(
+                currency: strtoupper((string) $order->currency),
                 customerId: $order->customer_id,
                 stayId: $order->stay_id,
                 roomId: $order->room_id,
@@ -180,6 +194,7 @@ class TrackingBoard extends Component
             'status_label' => 'Ouvert',
             'status_class' => 'bg-slate-100 text-slate-700',
             'last_activity_label' => '-',
+            'currency' => strtoupper($this->currency_filter),
         ];
     }
 
@@ -206,25 +221,27 @@ class TrackingBoard extends Component
         return $card;
     }
 
-    private function cardKey(?int $customerId, ?int $stayId, ?int $roomId, ?int $tableId, ?string $externalLabel): string
+    private function cardKey(string $currency, ?int $customerId, ?int $stayId, ?int $roomId, ?int $tableId, ?string $externalLabel): string
     {
+        $prefix = 'currency:'.strtoupper($currency).'|';
+
         if ($stayId) {
-            return 'stay:'.$stayId;
+            return $prefix.'stay:'.$stayId;
         }
 
         if ($roomId) {
-            return 'room:'.$roomId;
+            return $prefix.'room:'.$roomId;
         }
 
         if ($tableId) {
-            return 'table:'.$tableId;
+            return $prefix.'table:'.$tableId;
         }
 
         if ($customerId) {
-            return 'customer:'.$customerId;
+            return $prefix.'customer:'.$customerId;
         }
 
-        return 'external:'.strtolower(trim($externalLabel ?: 'passage'));
+        return $prefix.'external:'.strtolower(trim($externalLabel ?: 'passage'));
     }
 
     private function accountTitle(?Invoice $invoice, ?Order $order): string

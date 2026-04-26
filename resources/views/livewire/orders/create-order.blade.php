@@ -168,6 +168,16 @@
                                 </select>
                                 @error('served_by') <p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p> @enderror
                             </div>
+
+                            <div class="lg:col-span-4">
+                                <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Devise</label>
+                                <select wire:model.live="currency" class="prostay-input" @disabled($appendTargetOrder)>
+                                    @foreach($supportedCurrencies as $supportedCurrency)
+                                        <option value="{{ $supportedCurrency }}">{{ $supportedCurrency }}</option>
+                                    @endforeach
+                                </select>
+                                @error('currency') <p class="mt-1 text-xs font-semibold text-rose-700">{{ $message }}</p> @enderror
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -212,7 +222,7 @@
                                                     <p class="font-semibold text-slate-900">{{ $menu->name }}</p>
                                                     <p class="mt-1 text-xs text-slate-500">{{ $menu->category?->name ?? 'Plat restaurant' }}</p>
                                                 </div>
-                                                <p class="text-sm font-bold text-slate-900">{{ number_format((float) $menu->price, 2, '.', ' ') }}</p>
+                                                <p class="text-sm font-bold text-slate-900">{{ number_format((float) $menu->price, 2, '.', ' ') }} {{ strtoupper($currency) }}</p>
                                             </div>
                                             <div class="mt-3 flex items-center justify-between gap-2">
                                                 <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $menu->catalog_available ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
@@ -234,7 +244,7 @@
                                                     <p class="font-semibold text-slate-900">{{ $product->name }}</p>
                                                     <p class="mt-1 text-xs text-slate-500">{{ $product->category?->name ?? 'Stock global' }}</p>
                                                 </div>
-                                                <p class="text-sm font-bold text-slate-900">{{ number_format((float) $product->selling_price, 2, '.', ' ') }}</p>
+                                                <p class="text-sm font-bold text-slate-900">{{ number_format((float) $product->selling_price, 2, '.', ' ') }} {{ strtoupper($currency) }}</p>
                                             </div>
                                             <div class="mt-3 flex items-center justify-between gap-2 text-xs">
                                                 <span class="font-semibold {{ (float) $product->stock_quantity <= 0 ? 'text-rose-700' : 'text-slate-600' }}">
@@ -271,7 +281,7 @@
                         <div class="rounded-lg border border-slate-200 bg-white">
                             <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
                                 <p class="text-sm font-semibold text-slate-900">Panier</p>
-                                <p class="text-sm font-bold text-slate-900">{{ number_format($estimatedTotal, 2, '.', ' ') }}</p>
+                                <p class="text-sm font-bold text-slate-900">{{ number_format($estimatedTotal, 2, '.', ' ') }} {{ strtoupper($currency) }}</p>
                             </div>
 
                             <div class="divide-y divide-slate-100">
@@ -314,7 +324,7 @@
                                             @else
                                                 <span class="font-semibold text-slate-500">Article libre</span>
                                             @endif
-                                            <span class="font-bold text-slate-900">{{ number_format((float) ($row['subtotal'] ?? 0), 2, '.', ' ') }}</span>
+                                            <span class="font-bold text-slate-900">{{ number_format((float) ($row['subtotal'] ?? 0), 2, '.', ' ') }} {{ strtoupper($currency) }}</span>
                                         </div>
 
                                         @if($row && $row['is_stock_issue'])
@@ -424,7 +434,7 @@
 
                         <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
                             <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Total estime</p>
-                            <p class="mt-1 text-lg font-bold text-slate-900">{{ number_format($estimatedTotal, 2, '.', ' ') }}</p>
+                            <p class="mt-1 text-lg font-bold text-slate-900">{{ number_format($estimatedTotal, 2, '.', ' ') }} {{ strtoupper($currency) }}</p>
                         </div>
                     </div>
 
@@ -478,7 +488,7 @@
                                                 </p>
                                             </div>
                                             <div class="text-right">
-                                                <p class="font-semibold text-slate-700">{{ number_format($order->total, 2, '.', ' ') }}</p>
+                                                <p class="font-semibold text-slate-700">{{ number_format($order->total, 2, '.', ' ') }} {{ strtoupper((string) $order->currency) }}</p>
                                                 @if($status !== 'cancelled')
                                                     <button
                                                         type="button"

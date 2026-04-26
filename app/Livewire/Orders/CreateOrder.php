@@ -3,6 +3,7 @@
 namespace App\Livewire\Orders;
 
 use App\Enums\CustomerType;
+use App\Enums\CurrencyCode;
 use App\Enums\OrderStatus;
 use App\Models\Customer;
 use App\Models\Menu;
@@ -30,6 +31,7 @@ class CreateOrder extends Component
     public ?int $stay_id = null;
     public ?int $room_id = null;
     public ?int $served_by = null;
+    public string $currency = 'USD';
     public string $customer_type = 'walk_in_anonymous';
     public string $order_status = 'confirmed';
     public array $items = [];
@@ -41,6 +43,7 @@ class CreateOrder extends Component
 
     public function mount(): void
     {
+        $this->currency = CurrencyCode::default();
         $this->syncOrderContext();
 
         if (Auth::id()) {
@@ -78,6 +81,7 @@ class CreateOrder extends Component
         $this->catalog_search = '';
         $this->free_item_name = null;
         $this->free_item_price = 0;
+        $this->currency = CurrencyCode::default();
         $this->resetErrorBag();
 
         if (! $this->served_by && Auth::id()) {
@@ -100,6 +104,7 @@ class CreateOrder extends Component
         $this->stay_id = $order->stay_id;
         $this->room_id = $order->room_id;
         $this->served_by = $order->served_by;
+        $this->currency = strtoupper((string) ($order->currency ?: CurrencyCode::default()));
         $this->order_status = $order->status->value;
         $this->order_mode = $order->customer_type === CustomerType::Lodged ? 'lodged' : 'external';
         $this->customer_type = $order->customer_type->value;
@@ -403,6 +408,7 @@ class CreateOrder extends Component
                 'customer_id' => $order->customer_id,
                 'stay_id' => $order->stay_id,
                 'room_id' => $order->room_id,
+                'currency' => $order->currency,
                 'issued_by' => Auth::id(),
             ]);
 
@@ -432,12 +438,14 @@ class CreateOrder extends Component
                 'customer_id' => $order->customer_id,
                 'stay_id' => $order->stay_id,
                 'room_id' => $order->room_id,
+                'currency' => $order->currency,
                 'issued_by' => Auth::id(),
             ])
             : $invoiceService->createFromOrders([$order->fresh('items')], [
                 'customer_id' => $order->customer_id,
                 'stay_id' => $order->stay_id,
                 'room_id' => $order->room_id,
+                'currency' => $order->currency,
                 'issued_by' => Auth::id(),
             ]);
 
@@ -573,6 +581,7 @@ class CreateOrder extends Component
             'stockIssueCount' => (int) $rowSummaries->where('is_stock_issue', true)->count(),
             'suggestedProducts' => $this->suggestedProducts($products),
             'pendingToInvoiceCount' => $pendingToInvoiceCount,
+            'supportedCurrencies' => CurrencyCode::supported(),
         ]);
     }
 
@@ -589,6 +598,7 @@ class CreateOrder extends Component
 
         $this->validate([
             'order_mode' => ['required', 'in:lodged,external'],
+            'currency' => ['required', 'in:' . implode(',', CurrencyCode::supported())],
             'service_area_id' => ['nullable', 'exists:service_areas,id'],
             'customer_id' => ['nullable', 'exists:customers,id'],
             'external_customer_name' => ['nullable', 'required_if:order_mode,external', 'string', 'max:255'],
@@ -672,6 +682,12 @@ class CreateOrder extends Component
                     return null;
                 }
 
+                if (strtoupper((string) $targetOrder->currency) !== strtoupper($this->currency)) {
+                    $this->addError('currency', 'La devise doit rester identique a la commande d origine en mode ajout.');
+
+                    return null;
+                }
+
                 return $orderService->appendItems(
                     order: $targetOrder,
                     items: $this->normalizedItems(),
@@ -688,6 +704,7 @@ class CreateOrder extends Component
                 'room_id' => $this->room_id,
                 'served_by' => $this->served_by,
                 'status' => $this->order_status,
+                'currency' => strtoupper($this->currency),
                 'items' => $this->normalizedItems(),
                 'notes' => $finalNotes,
                 'created_by' => Auth::id(),

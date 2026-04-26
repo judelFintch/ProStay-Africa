@@ -14,7 +14,7 @@
         <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Revenue today') }}</p>
             <p class="mt-2 text-3xl font-black text-slate-900">{{ number_format($todayRevenue, 2, '.', ' ') }}</p>
-            <p class="mt-1 text-xs text-slate-500">XOF</p>
+            <p class="mt-1 text-xs text-slate-500">{{ $reportCurrency }}</p>
         </div>
         <div class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('Open invoices') }}</p>
@@ -29,13 +29,13 @@
     <div class="grid gap-4 lg:grid-cols-2">
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
             <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Restaurant encaisse aujourd hui</p>
-            <p class="mt-2 text-3xl font-black text-emerald-900">{{ number_format($restaurantExternalRevenue, 2, '.', ' ') }}</p>
-            <p class="mt-1 text-xs text-emerald-700">Paiements des clients externes uniquement.</p>
+            <p class="mt-2 text-3xl font-black text-emerald-900">{{ number_format($restaurantExternalRevenue, 2, '.', ' ') }} {{ $reportCurrency }}</p>
+            <p class="mt-1 text-xs text-emerald-700">Paiements des clients externes uniquement ({{ $reportCurrency }}).</p>
         </div>
         <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
             <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Restaurant transfere a l hotel</p>
-            <p class="mt-2 text-3xl font-black text-amber-900">{{ number_format($restaurantHotelTransferBalance, 2, '.', ' ') }}</p>
-            <p class="mt-1 text-xs text-amber-700">Consommations restaurant de clients loges a encaisser par la reception.</p>
+            <p class="mt-2 text-3xl font-black text-amber-900">{{ number_format($restaurantHotelTransferBalance, 2, '.', ' ') }} {{ $reportCurrency }}</p>
+            <p class="mt-1 text-xs text-amber-700">Consommations restaurant de clients loges a encaisser par la reception ({{ $reportCurrency }}).</p>
         </div>
     </div>
 

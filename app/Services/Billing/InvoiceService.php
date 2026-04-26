@@ -3,6 +3,7 @@
 namespace App\Services\Billing;
 
 use App\Enums\InvoiceStatus;
+use App\Enums\CurrencyCode;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Order;
@@ -11,6 +12,7 @@ use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 class InvoiceService
 {
@@ -24,10 +26,15 @@ class InvoiceService
                     'customer_id' => $attributes['customer_id'] ?? $order->customer_id,
                     'stay_id' => $attributes['stay_id'] ?? $order->stay_id,
                     'room_id' => $attributes['room_id'] ?? $order->room_id,
+                    'currency' => $attributes['currency'] ?? $order->currency ?? CurrencyCode::default(),
                     'issued_by' => $attributes['issued_by'] ?? null,
                     'status' => $attributes['status'] ?? InvoiceStatus::Draft->value,
                     'notes' => $attributes['notes'] ?? 'Dossier de facturation ouvert depuis la prise de commande.',
                 ]);
+            }
+
+            if ($order->currency && strtoupper((string) $invoice->currency) !== strtoupper((string) $order->currency)) {
+                throw new RuntimeException('Impossible de melanger des commandes de devises differentes sur une meme facture.');
             }
 
             $this->appendOrderToInvoice($invoice, $order);
@@ -60,6 +67,7 @@ class InvoiceService
                     'issued_at' => now(),
                     'due_at' => $attributes['due_at'] ?? null,
                     'status' => $attributes['status'] ?? InvoiceStatus::Unpaid->value,
+                    'currency' => strtoupper((string) ($attributes['currency'] ?? CurrencyCode::default())),
                     'tax_amount' => $attributes['tax_amount'] ?? 0,
                     'discount_amount' => $attributes['discount_amount'] ?? 0,
                     'notes' => $attributes['notes'] ?? 'Dossier de facturation du sejour.',
@@ -121,6 +129,7 @@ class InvoiceService
                 'issued_at' => now(),
                 'due_at' => $attributes['due_at'] ?? null,
                 'status' => $attributes['status'] ?? InvoiceStatus::Unpaid->value,
+                'currency' => strtoupper((string) ($attributes['currency'] ?? ($orders[0]->currency ?? CurrencyCode::default()))),
                 'tax_amount' => $attributes['tax_amount'] ?? 0,
                 'discount_amount' => $attributes['discount_amount'] ?? 0,
                 'notes' => $attributes['notes'] ?? null,
@@ -186,6 +195,10 @@ class InvoiceService
 
     public function appendOrderToInvoice(Invoice $invoice, Order $order): void
     {
+        if ($order->currency && strtoupper((string) $invoice->currency) !== strtoupper((string) $order->currency)) {
+            throw new RuntimeException('Devise de la commande incompatible avec la facture cible.');
+        }
+
         $order->loadMissing('items');
 
         foreach ($order->items as $orderItem) {

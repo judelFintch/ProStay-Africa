@@ -3,6 +3,7 @@
 namespace App\Services\Orders;
 
 use App\Enums\CustomerType;
+use App\Enums\CurrencyCode;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\Product;
@@ -33,6 +34,7 @@ class OrderService
                 'external_label' => Arr::get($payload, 'external_label'),
                 'status' => Arr::get($payload, 'status', OrderStatus::Draft->value),
                 'notes' => Arr::get($payload, 'notes'),
+                'currency' => strtoupper((string) Arr::get($payload, 'currency', CurrencyCode::default())),
             ]);
 
             foreach (Arr::get($payload, 'items', []) as $item) {

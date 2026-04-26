@@ -30,6 +30,7 @@ class Order extends Model
         'tax_amount',
         'discount_amount',
         'total',
+        'currency',
     ];
 
     protected function casts(): array

@@ -27,6 +27,7 @@ return new class extends Migration {
             $table->decimal('tax_amount', 12, 2)->default(0);
             $table->decimal('discount_amount', 12, 2)->default(0);
             $table->decimal('total', 12, 2)->default(0);
+            $table->string('currency', 3)->default('USD');
             $table->timestamps();
 
             $table->index(['status', 'customer_type']);
@@ -60,6 +61,7 @@ return new class extends Migration {
             $table->decimal('total', 12, 2)->default(0);
             $table->decimal('paid_total', 12, 2)->default(0);
             $table->decimal('balance', 12, 2)->default(0);
+            $table->string('currency', 3)->default('USD');
             $table->text('notes')->nullable();
             $table->timestamps();
 
@@ -86,7 +88,7 @@ return new class extends Migration {
             $table->foreignId('recorded_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('method')->default(PaymentMethod::Cash->value);
             $table->decimal('amount', 12, 2);
-            $table->string('currency', 3)->default('XOF');
+            $table->string('currency', 3)->default('USD');
             $table->string('provider_reference')->nullable();
             $table->dateTime('paid_at')->nullable();
             $table->text('notes')->nullable();

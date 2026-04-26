@@ -80,15 +80,15 @@
                         <div class="grid grid-cols-3 gap-2 text-xs">
                             <div class="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
                                 <p class="text-slate-500">Total</p>
-                                <p class="font-semibold text-slate-900">{{ number_format($invoice->total, 2, '.', ' ') }}</p>
+                                    <p class="font-semibold text-slate-900">{{ number_format($invoice->total, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</p>
                             </div>
                             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5">
                                 <p class="text-emerald-700">Paye</p>
-                                <p class="font-semibold text-emerald-700">{{ number_format($invoice->paid_total, 2, '.', ' ') }}</p>
+                                    <p class="font-semibold text-emerald-700">{{ number_format($invoice->paid_total, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</p>
                             </div>
                             <div class="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5">
                                 <p class="text-rose-700">Reste</p>
-                                <p class="font-semibold text-rose-700">{{ number_format($invoice->balance, 2, '.', ' ') }}</p>
+                                    <p class="font-semibold text-rose-700">{{ number_format($invoice->balance, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</p>
                             </div>
                         </div>
 
@@ -139,15 +139,15 @@
                             <div class="grid grid-cols-3 gap-2 text-xs">
                                 <div class="rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
                                     <p class="text-slate-500">Total</p>
-                                    <p class="font-semibold text-slate-900">{{ number_format($invoice->total, 2, '.', ' ') }}</p>
+                                        <p class="font-semibold text-slate-900">{{ number_format($invoice->total, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</p>
                                 </div>
                                 <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1.5">
                                     <p class="text-emerald-700">Paye</p>
-                                    <p class="font-semibold text-emerald-700">{{ number_format($invoice->paid_total, 2, '.', ' ') }}</p>
+                                        <p class="font-semibold text-emerald-700">{{ number_format($invoice->paid_total, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</p>
                                 </div>
                                 <div class="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1.5">
                                     <p class="text-rose-700">Reste</p>
-                                    <p class="font-semibold text-rose-700">{{ number_format($invoice->balance, 2, '.', ' ') }}</p>
+                                        <p class="font-semibold text-rose-700">{{ number_format($invoice->balance, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</p>
                                 </div>
                             </div>
 

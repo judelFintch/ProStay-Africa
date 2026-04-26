@@ -3,6 +3,7 @@
 namespace App\Services\Pos;
 
 use App\Enums\CustomerType;
+use App\Enums\CurrencyCode;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\PosSession;
@@ -41,6 +42,7 @@ class PosService
                 'customer_id' => $payload['customer_id'] ?? null,
                 'customer_type' => $payload['customer_id'] ? CustomerType::WalkInIdentified->value : CustomerType::WalkInAnonymous->value,
                 'status' => OrderStatus::Closed->value,
+                'currency' => strtoupper((string) ($payload['currency'] ?? CurrencyCode::default())),
                 'created_by' => $payload['created_by'] ?? null,
                 'items' => $payload['items'] ?? [],
                 'notes' => $payload['notes'] ?? 'POS quick sale',
@@ -50,7 +52,7 @@ class PosService
                 'amount' => $order->total,
                 'method' => $payload['payment_method'] ?? 'cash',
                 'recorded_by' => $payload['created_by'] ?? null,
-                'currency' => $payload['currency'] ?? 'XOF',
+                'currency' => $payload['currency'] ?? $order->currency ?? CurrencyCode::default(),
             ]);
 
             return $order;
