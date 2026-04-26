@@ -2,13 +2,19 @@
     <div class="rounded-2xl bg-slate-950 p-6 text-white shadow-sm">
         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-300">Restaurant</p>
         <h1 class="mt-2 text-2xl font-black">Plats et recettes</h1>
-        <p class="mt-2 text-sm text-slate-300">Constitution des plats, prix de vente et disponibilite selon les ingredients en stock.</p>
+        <p class="mt-2 text-sm text-slate-300">Constitution des plats, prix de vente et disponibilite calculee apres creation selon le stock global.</p>
     </div>
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div class="border-b border-slate-200 px-4 py-3">
-                <h2 class="text-lg font-bold text-slate-900">Catalogue des plats</h2>
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 class="text-lg font-bold text-slate-900">Catalogue des plats</h2>
+                    @php($unavailableCount = $menus->filter(fn ($menu) => ! ($menu->getAttribute('recipe_availability')['is_available'] ?? false))->count())
+                    <span class="inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold {{ $unavailableCount > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700' }}">
+                        {{ $unavailableCount > 0 ? $unavailableCount.' plat(s) avec alerte stock' : 'Tous les plats sont disponibles' }}
+                    </span>
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -25,10 +31,16 @@
                     <tbody class="divide-y divide-slate-100 bg-white">
                         @forelse($menus as $menu)
                             @php($availability = $menu->getAttribute('recipe_availability'))
-                            <tr class="align-top">
+                            <tr class="align-top {{ $availability['is_available'] ? '' : 'bg-rose-50/50' }}">
                                 <td class="px-4 py-3">
                                     <p class="font-semibold text-slate-900">{{ $menu->name }}</p>
                                     <p class="text-xs text-slate-500">{{ $menu->category?->name ?? '-' }} · {{ $menu->serviceArea?->name ?? '-' }}</p>
+                                    @unless($availability['is_available'])
+                                        <p class="mt-2 inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                                            <i class="fa-solid fa-triangle-exclamation"></i>
+                                            Stock insuffisant
+                                        </p>
+                                    @endunless
                                 </td>
                                 <td class="px-4 py-3 font-semibold text-slate-900">{{ number_format((float) $menu->price, 2, '.', ' ') }}</td>
                                 <td class="px-4 py-3">
@@ -54,7 +66,12 @@
                                             <span class="inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700">Indisponible</span>
                                             @foreach($availability['missing'] as $missing)
                                                 <p class="text-xs text-rose-700">
-                                                    {{ $missing['product']->name }}: {{ number_format($missing['available'], 3, '.', ' ') }} / {{ number_format($missing['required'], 3, '.', ' ') }} {{ $missing['unit'] }}
+                                                    {{ $missing['name'] }}:
+                                                    @if($missing['missing_product'] ?? false)
+                                                        article absent du stock
+                                                    @else
+                                                        {{ number_format($missing['available'], 3, '.', ' ') }} / {{ number_format($missing['required'], 3, '.', ' ') }} {{ $missing['unit'] }}
+                                                    @endif
                                                 </p>
                                             @endforeach
                                         </div>
@@ -134,7 +151,7 @@
 
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <p class="text-sm font-bold text-slate-900">Recette</p>
+                        <p class="text-sm font-bold text-slate-900">Articles de la recette</p>
                         <button type="button" wire:click="addIngredient" class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">Ajouter ingredient</button>
                     </div>
 
@@ -142,9 +159,15 @@
                         <div class="rounded-lg border border-slate-200 p-3">
                             <div class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_90px_80px_40px]">
                                 <select wire:model="ingredients.{{ $index }}.product_id" class="prostay-input text-xs">
-                                    <option value="">Ingredient stock</option>
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->id }}">{{ $product->name }} ({{ number_format((float) $product->stock_quantity, 3, '.', ' ') }} {{ $product->unit }})</option>
+                                    <option value="">Choisir un article</option>
+                                    @foreach($products->groupBy(fn ($product) => $product->category?->name ?? 'Sans categorie') as $categoryName => $categoryProducts)
+                                        <optgroup label="{{ $categoryName }}">
+                                            @foreach($categoryProducts as $product)
+                                                <option value="{{ $product->id }}">
+                                                    {{ $product->name }}{{ $product->unit ? ' - '.$product->unit : '' }}
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
                                     @endforeach
                                 </select>
                                 <input type="number" step="0.001" min="0.001" wire:model.blur="ingredients.{{ $index }}.quantity" class="prostay-input text-xs" />

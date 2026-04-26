@@ -26,18 +26,25 @@ class MenuRecipeService
 
         $missing = $menu->ingredients
             ->filter(function ($ingredient) use ($servings): bool {
+                if (! $ingredient->product) {
+                    return true;
+                }
+
                 $required = (float) $ingredient->quantity * $servings;
 
                 return (float) $ingredient->product->stock_quantity < $required;
             })
             ->map(function ($ingredient) use ($servings): array {
                 $required = (float) $ingredient->quantity * $servings;
+                $product = $ingredient->product;
 
                 return [
-                    'product' => $ingredient->product,
+                    'product' => $product,
+                    'name' => $product?->name ?? 'Article supprime ou introuvable',
                     'required' => $required,
-                    'available' => (float) $ingredient->product->stock_quantity,
-                    'unit' => $ingredient->unit ?: $ingredient->product->unit,
+                    'available' => $product ? (float) $product->stock_quantity : 0,
+                    'unit' => $ingredient->unit ?: ($product?->unit ?? ''),
+                    'missing_product' => ! $product,
                 ];
             })
             ->values();
@@ -59,6 +66,10 @@ class MenuRecipeService
 
         return (int) $menu->ingredients
             ->map(function ($ingredient): int {
+                if (! $ingredient->product) {
+                    return 0;
+                }
+
                 $quantity = (float) $ingredient->quantity;
 
                 if ($quantity <= 0) {

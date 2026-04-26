@@ -117,7 +117,12 @@ class Manager extends Component
             'menus' => $menus,
             'categories' => MenuCategory::query()->orderBy('name')->get(),
             'areas' => ServiceArea::query()->whereIn('code', ['restaurant', 'bar', 'terrace'])->orderBy('name')->get(),
-            'products' => Product::query()->where('is_active', true)->orderBy('name')->get(),
+            'products' => Product::query()
+                ->with('category')
+                ->orderByRaw('product_category_id is null')
+                ->orderBy('product_category_id')
+                ->orderBy('name')
+                ->get(),
         ]);
     }
 }
