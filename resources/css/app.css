@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+	[x-cloak] {
+		display: none !important;
+	}
+
 	:root {
 		--prostay-ink: #0f172a;
 		--prostay-mint: #0f766e;
