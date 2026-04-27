@@ -14,41 +14,9 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-            <script>
-                document.addEventListener('alpine:init', () => {
-                    const storageKey = 'prostay.sidebar.open';
-                    let initialOpen = false;
-
-                    try {
-                        const saved = localStorage.getItem(storageKey);
-                        if (saved !== null) {
-                            initialOpen = saved === '1';
-                        }
-                    } catch (error) {
-                        // Keep default value when localStorage is unavailable.
-                    }
-
-                    Alpine.store('sidebar', {
-                        open: initialOpen,
-                        setOpen(value) {
-                            this.open = value;
-
-                            try {
-                                localStorage.setItem(storageKey, value ? '1' : '0');
-                            } catch (error) {
-                                // Ignore storage failures and keep UI state in memory.
-                            }
-                        },
-                        toggle() {
-                            this.setOpen(!this.open);
-                        }
-                    });
-                });
-            </script>
         </head>
         <body class="antialiased">
-            <div class="min-h-screen transition-[padding] duration-300 ease-in-out" :class="$store.sidebar.open ? 'lg:pl-72' : 'lg:pl-0'">
-            <livewire:layout.navigation />
+            <div class="min-h-screen">
 
             <div class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 backdrop-blur">
                 <div class="mx-auto flex max-w-7xl justify-end gap-2 px-4 py-2 sm:px-6 lg:px-8">
