@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Reports;
 
+use App\Exports\ReportsOverviewExport;
 use App\Enums\CurrencyCode;
 use App\Enums\InvoiceStatus;
 use App\Enums\StayStatus;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Payment;
@@ -14,7 +16,7 @@ use App\Models\Stay;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Livewire\Component;
 
 class Overview extends Component
@@ -70,6 +72,31 @@ class Overview extends Component
         $this->setPreset('month');
     }
 
+    public function exportExcel()
+    {
+        $timestamp = now()->format('Ymd_His');
+
+        return Excel::download(
+            new ReportsOverviewExport($this->render()->getData()),
+            'reports_overview_'.$timestamp.'.xlsx'
+        );
+    }
+
+    public function exportPdf()
+    {
+        $data = $this->render()->getData();
+
+        $pdf = Pdf::loadView('exports.reports-overview-pdf', $data)
+            ->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(
+            static function () use ($pdf): void {
+                echo $pdf->output();
+            },
+            'reports_overview_'.now()->format('Ymd_His').'.pdf'
+        );
+    }
+
     public function render()
     {
         $reportCurrency = CurrencyCode::default();
@@ -98,8 +125,8 @@ class Overview extends Component
 
         $ordersBaseQuery = Order::query()
             ->with(['creator', 'serviceArea'])
-            ->whereDate('created_at', '>=', $startDate)
-            ->whereDate('created_at', '<=', $endDate)
+            ->whereDate('orders.created_at', '>=', $startDate)
+            ->whereDate('orders.created_at', '<=', $endDate)
             ->when($this->currencyFilter !== 'all', function (Builder $query): void {
                 $query->where('currency', strtoupper($this->currencyFilter));
             })
@@ -112,8 +139,8 @@ class Overview extends Component
 
         $stockBaseQuery = StockMovement::query()
             ->with(['user', 'serviceArea'])
-            ->whereDate('created_at', '>=', $startDate)
-            ->whereDate('created_at', '<=', $endDate)
+            ->whereDate('stock_movements.created_at', '>=', $startDate)
+            ->whereDate('stock_movements.created_at', '<=', $endDate)
             ->when($this->userFilter !== 'all', function (Builder $query): void {
                 $query->where('user_id', (int) $this->userFilter);
             })
@@ -180,7 +207,7 @@ class Overview extends Component
         ])->count();
 
         $ordersToday = Order::query()
-            ->whereDate('created_at', today())
+            ->whereDate('orders.created_at', today())
             ->when($this->serviceFilter !== 'all', function (Builder $query): void {
                 $query->where('service_area_id', (int) $this->serviceFilter);
             })
@@ -270,8 +297,8 @@ class Overview extends Component
             ->active()
             ->withCount([
                 'orders as period_orders_count' => function (Builder $query) use ($startDate, $endDate): void {
-                    $query->whereDate('created_at', '>=', $startDate)
-                        ->whereDate('created_at', '<=', $endDate);
+                    $query->whereDate('orders.created_at', '>=', $startDate)
+                        ->whereDate('orders.created_at', '<=', $endDate);
                 },
             ])
             ->orderByDesc('period_orders_count')
