@@ -4,6 +4,7 @@ namespace App\Livewire\Orders;
 
 use App\Enums\CurrencyCode;
 use App\Enums\InvoiceStatus;
+use App\Models\DiningTable;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\ServiceArea;
@@ -71,7 +72,12 @@ class TrackingBoard extends Component
         return view('livewire.orders.tracking-board', [
             'cards' => $cards,
             'selectedCard' => $selectedCard,
-            'serviceAreas' => ServiceArea::query()->where('is_active', true)->orderBy('name')->get(),
+            'serviceAreas' => ServiceArea::query()
+                ->active()
+                ->forDomain('restaurant')
+                ->supporting('orders')
+                ->ordered()
+                ->get(),
             'supportedCurrencies' => CurrencyCode::supported(),
             'stats' => [
                 'cards' => $cards->count(),
@@ -246,8 +252,10 @@ class TrackingBoard extends Component
 
     private function accountTitle(?Invoice $invoice, ?Order $order): string
     {
-        if ($order?->table) {
-            return 'Table '.$order->table->number;
+        $diningTable = $order?->getRelationValue('table');
+
+        if ($diningTable instanceof DiningTable) {
+            return 'Table '.$diningTable->number;
         }
 
         if ($invoice?->room || $order?->room) {

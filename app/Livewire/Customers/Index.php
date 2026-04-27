@@ -54,7 +54,7 @@ class Index extends Component
     public bool $blacklisted = false;
     public bool $is_identified = true;
     public ?string $travel_type = null;
-    public bool $with_room_rental = false;
+    public bool $with_room_rental = true;
     public ?int $room_id = null;
     public string $check_in_date = '';
     public string $check_out_date = '';
@@ -69,6 +69,8 @@ class Index extends Component
     public function mount(string $mode = 'form'): void
     {
         $this->mode = in_array($mode, ['form', 'registry'], true) ? $mode : 'form';
+        $this->check_in_date = now()->toDateString();
+        $this->check_out_date = now()->addDay()->toDateString();
     }
 
     public function updatedSearch(): void
@@ -360,10 +362,12 @@ class Index extends Component
         $this->preferred_language = 'fr';
         $this->vip_status = false;
         $this->blacklisted = false;
-        $this->with_room_rental = false;
+        $this->with_room_rental = true;
         $this->adults = 1;
         $this->children = 0;
         $this->nightly_rate = null;
+        $this->check_in_date = now()->toDateString();
+        $this->check_out_date = now()->addDay()->toDateString();
         $this->step = 'ticket';
         $this->dispatch('customer-created');
     }

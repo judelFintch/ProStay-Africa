@@ -1,4 +1,14 @@
 <div class="mx-auto max-w-7xl space-y-4 px-4 py-4 sm:px-6 lg:px-8">
+    @php
+        $invoiceStatusLabels = [
+            'draft' => 'Brouillon',
+            'unpaid' => 'Impayée',
+            'partially_paid' => 'Partiellement payée',
+            'paid' => 'Payée',
+            'cancelled' => 'Annulée',
+        ];
+    @endphp
+
     <section class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -65,7 +75,7 @@
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-sm font-semibold text-slate-900">{{ $invoice->reference }}</p>
                             <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $invoice->status->value === 'partially_paid' ? 'bg-amber-100 text-amber-700' : ($invoice->status->value === 'draft' ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-700') }}">
-                                {{ $invoice->status->value }}
+                                {{ $invoiceStatusLabels[$invoice->status->value] ?? $invoice->status->value }}
                             </span>
                         </div>
 
@@ -124,7 +134,7 @@
                             <div class="flex items-center justify-between gap-3">
                                 <p class="text-sm font-semibold text-slate-900">{{ $invoice->reference }}</p>
                                 <span class="rounded-full px-2.5 py-1 text-[11px] font-semibold {{ $invoice->status->value === 'partially_paid' ? 'bg-amber-100 text-amber-700' : ($invoice->status->value === 'draft' ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-700') }}">
-                                    {{ $invoice->status->value }}
+                                    {{ $invoiceStatusLabels[$invoice->status->value] ?? $invoice->status->value }}
                                 </span>
                             </div>
 

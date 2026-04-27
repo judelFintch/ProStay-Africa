@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
         ]);
+
+        $middleware->alias([
+            'workspace.domain' => \App\Http\Middleware\EnsureWorkspaceDomainAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

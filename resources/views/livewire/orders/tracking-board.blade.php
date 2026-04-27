@@ -1,4 +1,14 @@
 <div wire:poll.15s class="mx-auto max-w-7xl space-y-5 px-4 py-5 sm:px-6 lg:px-8">
+    @php
+        $invoiceStatusLabels = [
+            'draft' => 'Brouillon',
+            'unpaid' => 'Impayée',
+            'partially_paid' => 'Partiellement payée',
+            'paid' => 'Payée',
+            'cancelled' => 'Annulée',
+        ];
+    @endphp
+
     <section class="rounded-xl border border-slate-200 bg-white">
         <div class="border-b border-slate-200 px-4 py-4">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -178,7 +188,7 @@
                                             <span class="font-semibold text-slate-900">{{ $invoice->reference }}</span>
                                             <span class="font-bold text-slate-900">{{ number_format((float) $invoice->balance, 2, '.', ' ') }} {{ strtoupper((string) $invoice->currency) }}</span>
                                         </div>
-                                        <p class="mt-1 text-xs text-slate-500">{{ $invoice->status->value }} · {{ $invoice->items->count() }} ligne(s)</p>
+                                        <p class="mt-1 text-xs text-slate-500">{{ $invoiceStatusLabels[$invoice->status->value] ?? $invoice->status->value }} · {{ $invoice->items->count() }} ligne(s)</p>
                                     </div>
                                 @empty
                                     <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">Aucune facture ouverte.</div>

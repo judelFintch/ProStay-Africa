@@ -1,3 +1,3 @@
-<x-layouts.app title="Rooms - ProStay Africa">
+<x-layouts.app title="Chambres - ProStay Africa">
     <livewire:rooms.board />
 </x-layouts.app>

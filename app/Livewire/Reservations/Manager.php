@@ -18,6 +18,8 @@ use RuntimeException;
 
 class Manager extends Component
 {
+    public string $stay_filter = 'all';
+
     public ?int $customer_id = null;
 
     public ?int $room_id = null;
@@ -49,6 +51,19 @@ class Manager extends Component
     public int $edit_children = 0;
 
     public ?string $edit_notes = null;
+
+    public function mount(): void
+    {
+        if (request()->query('report') === 'checkout_due') {
+            $this->stay_filter = 'checkout_due';
+        }
+    }
+
+    public function setStayFilter(string $filter): void
+    {
+        $allowed = ['all', 'checkout_due', 'overdue'];
+        $this->stay_filter = in_array($filter, $allowed, true) ? $filter : 'all';
+    }
 
     public function createReservation(): void
     {
@@ -348,12 +363,25 @@ class Manager extends Component
             ignoredReservationId: $this->edit_reservation_id,
         );
 
+        $activeStaysQuery = Stay::query()
+            ->with(['customer', 'room', 'invoices'])
+            ->where('status', StayStatus::Active->value)
+            ->latest();
+
+        if ($this->stay_filter === 'checkout_due') {
+            $activeStaysQuery->whereDate('expected_check_out_at', '<=', now()->toDateString());
+        } elseif ($this->stay_filter === 'overdue') {
+            $activeStaysQuery->whereDate('expected_check_out_at', '<', now()->toDateString());
+        }
+
+        $activeStays = $activeStaysQuery->limit(20)->get();
+
         return view('livewire.reservations.manager', [
             'customers' => Customer::query()->orderBy('full_name')->limit(150)->get(),
             'rooms' => $rooms,
             'editRooms' => $editRooms,
             'reservations' => Reservation::query()->with(['customer', 'room'])->latest()->limit(20)->get(),
-            'activeStays' => Stay::query()->with(['customer', 'room', 'invoices'])->where('status', StayStatus::Active->value)->latest()->limit(20)->get(),
+            'activeStays' => $activeStays,
             'checkedInValue' => ReservationStatus::CheckedIn->value,
         ]);
     }

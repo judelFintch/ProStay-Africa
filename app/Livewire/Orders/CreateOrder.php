@@ -457,7 +457,12 @@ class CreateOrder extends Component
 
     public function render()
     {
-        $serviceAreas = ServiceArea::query()->where('is_active', true)->orderBy('name')->get();
+        $serviceAreas = ServiceArea::query()
+            ->active()
+            ->forDomain('restaurant')
+            ->supporting('orders')
+            ->ordered()
+            ->get();
         $customers = Customer::query()->orderBy('full_name')->limit(100)->get();
         $activeServerScope = User::query()
             ->where('is_server', true)

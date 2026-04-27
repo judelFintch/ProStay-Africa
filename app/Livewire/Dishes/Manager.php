@@ -116,7 +116,12 @@ class Manager extends Component
         return view('livewire.dishes.manager', [
             'menus' => $menus,
             'categories' => MenuCategory::query()->orderBy('name')->get(),
-            'areas' => ServiceArea::query()->whereIn('code', ['restaurant', 'bar', 'terrace'])->orderBy('name')->get(),
+            'areas' => ServiceArea::query()
+                ->active()
+                ->forDomain('restaurant')
+                ->supporting('menu')
+                ->ordered()
+                ->get(),
             'products' => Product::query()
                 ->with('category')
                 ->orderByRaw('product_category_id is null')

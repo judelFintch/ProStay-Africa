@@ -18,23 +18,67 @@ new class extends Component
 
 <nav x-data="{ open: false }" class="relative z-40">
     @php
-        $links = [
-            ['label' => __('Suivi commandes'), 'route' => 'orders.tracking', 'match' => 'orders.tracking', 'icon' => 'fa-table-list', 'highlight' => true],
-            ['label' => __('Dashboard'), 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'fa-chart-line'],
-            ['label' => __('Reception'), 'route' => 'hotel.reception', 'match' => 'hotel.*', 'icon' => 'fa-concierge-bell'],
-            ['label' => __('Customers'), 'route' => 'customers.index', 'match' => 'customers.*', 'icon' => 'fa-users'],
-            ['label' => __('Reservations'), 'route' => 'reservations.index', 'match' => 'reservations.*', 'icon' => 'fa-calendar-check'],
-            ['label' => __('Rooms'), 'route' => 'rooms.index', 'match' => 'rooms.*', 'icon' => 'fa-bed'],
-            ['label' => __('Orders'), 'route' => 'orders.create', 'match' => 'orders.create', 'icon' => 'fa-utensils'],
-            ['label' => __('Plats'), 'route' => 'dishes.index', 'match' => 'dishes.*', 'icon' => 'fa-bowl-food'],
-            ['label' => __('Servers'), 'route' => 'servers.index', 'match' => 'servers.*', 'icon' => 'fa-user-tie'],
-            ['label' => __('Invoices'), 'route' => 'billing.invoices', 'match' => 'billing.invoices', 'icon' => 'fa-file-invoice'],
-            ['label' => __('Payments'), 'route' => 'billing.payments', 'match' => 'billing.payments', 'icon' => 'fa-wallet'],
-            ['label' => __('Stock'), 'route' => 'stock.index', 'match' => 'stock.*', 'icon' => 'fa-boxes-stacked'],
-            ['label' => __('Laundry'), 'route' => 'laundry.index', 'match' => 'laundry.*', 'icon' => 'fa-soap'],
-            ['label' => __('POS'), 'route' => 'pos.quick-sale', 'match' => 'pos.*', 'icon' => 'fa-cash-register'],
-            ['label' => __('Reports'), 'route' => 'reports.index', 'match' => 'reports.*', 'icon' => 'fa-chart-pie'],
+        $workspaceContext = session('workspace_context', 'all');
+        $domainPermissions = [
+            'hotel' => ['customers.manage', 'rooms.manage', 'stays.manage', 'laundry.manage'],
+            'restaurant' => ['orders.manage', 'pos.use', 'stock.manage'],
         ];
+
+        $currentUser = auth()->user();
+        $hasAssignedRoles = $currentUser?->roles()->exists() ?? false;
+        $isAdmin = $hasAssignedRoles
+            ? $currentUser->roles()->where('name', 'admin')->exists()
+            : false;
+        $canAccessHotel = ! $hasAssignedRoles || $isAdmin || $currentUser->roles()
+            ->whereHas('permissions', fn ($query) => $query->whereIn('name', $domainPermissions['hotel']))
+            ->exists();
+        $canAccessRestaurant = ! $hasAssignedRoles || $isAdmin || $currentUser->roles()
+            ->whereHas('permissions', fn ($query) => $query->whereIn('name', $domainPermissions['restaurant']))
+            ->exists();
+
+        $links = [
+            ['label' => __('Dashboard'), 'route' => 'dashboard', 'match' => 'dashboard', 'icon' => 'fa-chart-line', 'domain' => 'shared'],
+            ['label' => __('Customers'), 'route' => 'customers.index', 'match' => 'customers.*', 'icon' => 'fa-users', 'domain' => 'shared'],
+            ['label' => __('Users'), 'route' => 'users.index', 'match' => 'users.*', 'icon' => 'fa-user-shield', 'domain' => 'shared'],
+            ['label' => __('Invoices'), 'route' => 'billing.invoices', 'match' => 'billing.invoices', 'icon' => 'fa-file-invoice', 'domain' => 'shared'],
+            ['label' => __('Payments'), 'route' => 'billing.payments', 'match' => 'billing.payments', 'icon' => 'fa-wallet', 'domain' => 'shared'],
+            ['label' => __('Reports'), 'route' => 'reports.index', 'match' => 'reports.*', 'icon' => 'fa-chart-pie', 'domain' => 'shared'],
+            ['label' => __('Services'), 'route' => 'services.index', 'match' => 'services.*', 'icon' => 'fa-diagram-project', 'domain' => 'shared'],
+            ['label' => __('Reception'), 'route' => 'hotel.reception', 'match' => 'hotel.*', 'icon' => 'fa-concierge-bell', 'domain' => 'hotel'],
+            ['label' => __('Reservations'), 'route' => 'reservations.index', 'match' => 'reservations.*', 'icon' => 'fa-calendar-check', 'domain' => 'hotel'],
+            ['label' => __('Rooms'), 'route' => 'rooms.index', 'match' => 'rooms.*', 'icon' => 'fa-bed', 'domain' => 'hotel'],
+            ['label' => __('Laundry'), 'route' => 'laundry.index', 'match' => 'laundry.*', 'icon' => 'fa-soap', 'domain' => 'hotel'],
+            ['label' => __('Suivi commandes'), 'route' => 'orders.tracking', 'match' => 'orders.tracking', 'icon' => 'fa-table-list', 'highlight' => true, 'domain' => 'restaurant'],
+            ['label' => __('Orders'), 'route' => 'orders.create', 'match' => 'orders.create', 'icon' => 'fa-utensils', 'domain' => 'restaurant'],
+            ['label' => __('Plats'), 'route' => 'dishes.index', 'match' => 'dishes.*', 'icon' => 'fa-bowl-food', 'domain' => 'restaurant'],
+            ['label' => __('Servers'), 'route' => 'servers.index', 'match' => 'servers.*', 'icon' => 'fa-user-tie', 'domain' => 'restaurant'],
+            ['label' => __('Stock'), 'route' => 'stock.index', 'match' => 'stock.*', 'icon' => 'fa-boxes-stacked', 'domain' => 'restaurant'],
+            ['label' => __('POS'), 'route' => 'pos.quick-sale', 'match' => 'pos.*', 'icon' => 'fa-cash-register', 'domain' => 'restaurant'],
+        ];
+
+        $links = array_values(array_filter($links, function (array $link) use ($workspaceContext, $canAccessHotel, $canAccessRestaurant): bool {
+            $domain = $link['domain'] ?? 'shared';
+
+            if ($domain === 'hotel' && ! $canAccessHotel) {
+                return false;
+            }
+
+            if ($domain === 'restaurant' && ! $canAccessRestaurant) {
+                return false;
+            }
+
+            if ($workspaceContext === 'all') {
+                return true;
+            }
+
+            return $domain === 'shared' || $domain === $workspaceContext;
+        }));
+
+        $workspaceLabel = match ($workspaceContext) {
+            'hotel' => 'Mode Hotel',
+            'restaurant' => 'Mode Restaurant',
+            default => 'Mode Global',
+        };
     @endphp
 
     <div class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur lg:hidden">
@@ -43,7 +87,7 @@ new class extends Component
                 <x-application-logo class="h-8 w-8 fill-current text-emerald-700" />
                 <div>
                     <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">ProStay</p>
-                    <p class="text-sm font-bold text-slate-900">Hotel Dashboard</p>
+                    <p class="text-sm font-bold text-slate-900">{{ $workspaceLabel }}</p>
                 </div>
             </div>
             <button @click="open = !open" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm">
@@ -64,13 +108,22 @@ new class extends Component
                     <x-application-logo class="h-10 w-10 fill-current text-emerald-700" />
                     <div>
                         <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">ProStay Africa</p>
-                        <p class="text-sm font-bold text-slate-900">Hotel Command Center</p>
+                        <p class="text-sm font-bold text-slate-900">{{ $workspaceLabel }}</p>
                     </div>
                 </a>
             </div>
 
             <div class="flex-1 overflow-y-auto px-3 py-4">
                 <div class="space-y-1">
+                    <div class="mb-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+                        <p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Contexte</p>
+                        <div class="grid grid-cols-3 gap-1">
+                            <a href="{{ route('workspace.switch', 'all') }}" wire:navigate @click="open = false" class="rounded-lg px-2 py-1.5 text-center text-[11px] font-semibold transition {{ $workspaceContext === 'all' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100' }}">Global</a>
+                            <a href="{{ route('workspace.switch', 'hotel') }}" wire:navigate @click="open = false" class="rounded-lg px-2 py-1.5 text-center text-[11px] font-semibold transition {{ $workspaceContext === 'hotel' ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:bg-slate-100' }}">Hotel</a>
+                            <a href="{{ route('workspace.switch', 'restaurant') }}" wire:navigate @click="open = false" class="rounded-lg px-2 py-1.5 text-center text-[11px] font-semibold transition {{ $workspaceContext === 'restaurant' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:bg-slate-100' }}">Restaurant</a>
+                        </div>
+                    </div>
+
                     @foreach($links as $link)
                         @php
                             $isActive = request()->routeIs($link['match']);
@@ -135,7 +188,7 @@ new class extends Component
                         <x-application-logo class="h-10 w-10 fill-current text-emerald-700" />
                         <div>
                             <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">ProStay Africa</p>
-                            <p class="text-sm font-bold text-slate-900">Hotel Command Center</p>
+                            <p class="text-sm font-bold text-slate-900">{{ $workspaceLabel }}</p>
                         </div>
                     </a>
                     <button
@@ -150,6 +203,15 @@ new class extends Component
 
             <div class="flex-1 overflow-y-auto px-3 py-4">
                 <div class="space-y-1">
+                    <div class="mb-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+                        <p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Contexte</p>
+                        <div class="grid grid-cols-3 gap-1">
+                            <a href="{{ route('workspace.switch', 'all') }}" wire:navigate class="rounded-lg px-2 py-1.5 text-center text-[11px] font-semibold transition {{ $workspaceContext === 'all' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100' }}">Global</a>
+                            <a href="{{ route('workspace.switch', 'hotel') }}" wire:navigate class="rounded-lg px-2 py-1.5 text-center text-[11px] font-semibold transition {{ $workspaceContext === 'hotel' ? 'bg-emerald-700 text-white' : 'text-slate-600 hover:bg-slate-100' }}">Hotel</a>
+                            <a href="{{ route('workspace.switch', 'restaurant') }}" wire:navigate class="rounded-lg px-2 py-1.5 text-center text-[11px] font-semibold transition {{ $workspaceContext === 'restaurant' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:bg-slate-100' }}">Restaurant</a>
+                        </div>
+                    </div>
+
                     @foreach($links as $link)
                         @php
                             $isActive = request()->routeIs($link['match']);

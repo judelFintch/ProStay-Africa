@@ -34,7 +34,9 @@ class Overview extends Component
                 $query->whereNull('stay_id')
                     ->whereNull('room_id')
                     ->whereHas('items.orderItem.order.serviceArea', function ($areaQuery): void {
-                        $areaQuery->whereIn('code', ['restaurant', 'bar', 'terrace']);
+                        $areaQuery
+                            ->where('domain', 'restaurant')
+                            ->where('supports_orders', true);
                     });
             })
             ->sum('amount');
@@ -48,7 +50,9 @@ class Overview extends Component
             })
             ->where('currency', $reportCurrency)
             ->whereHas('items.orderItem.order.serviceArea', function ($areaQuery): void {
-                $areaQuery->whereIn('code', ['restaurant', 'bar', 'terrace']);
+                $areaQuery
+                    ->where('domain', 'restaurant')
+                    ->where('supports_orders', true);
             })
             ->sum('balance');
 
@@ -60,8 +64,11 @@ class Overview extends Component
         $ordersToday = Order::query()->whereDate('created_at', today())->count();
 
         $serviceAreaLoad = ServiceArea::query()
+            ->active()
             ->withCount('orders')
             ->orderByDesc('orders_count')
+            ->orderBy('sort_order')
+            ->orderBy('name')
             ->limit(5)
             ->get();
 

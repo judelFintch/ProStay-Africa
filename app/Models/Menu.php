@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Menu extends Model
@@ -33,5 +34,11 @@ class Menu extends Model
     public function ingredients(): HasMany
     {
         return $this->hasMany(MenuIngredient::class);
+    }
+
+    /** Prestations/bénéfices dont ce plat est le support de livraison. */
+    public function benefits(): BelongsToMany
+    {
+        return $this->belongsToMany(Benefit::class);
     }
 }

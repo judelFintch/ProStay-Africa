@@ -59,7 +59,12 @@ class QuickSale extends Component
     public function render()
     {
         return view('livewire.pos.quick-sale', [
-            'areas' => ServiceArea::query()->whereIn('code', ['restaurant', 'bar', 'terrace', 'pos'])->orderBy('name')->get(),
+            'areas' => ServiceArea::query()
+                ->active()
+                ->forDomain('restaurant')
+                ->supporting('pos')
+                ->ordered()
+                ->get(),
             'customers' => Customer::query()->orderBy('full_name')->limit(100)->get(),
             'products' => Product::query()->where('is_active', true)->orderBy('name')->limit(200)->get(),
         ]);

@@ -226,8 +226,10 @@ class InvoiceBuilder extends Component
             ->get();
 
         $serviceAreas = ServiceArea::query()
-            ->where('is_active', true)
-            ->orderBy('name')
+            ->active()
+            ->forDomain('restaurant')
+            ->supporting('orders')
+            ->ordered()
             ->get();
 
         $externalOrders = $deliverableOrders->whereIn('customer_type', [
